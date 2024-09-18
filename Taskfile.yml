@@ -1,0 +1,31 @@
+version: "3"
+
+#
+# https://taskfile.dev/usage/
+#
+
+tasks:
+  default:
+    cmds:
+      - echo "See taskfile.dev/usage/"
+    silent: true
+
+  scratch:
+    deps: [fmt]
+    cmds:
+      - go build -o build/bin/ ./cmd/scratch
+      - ./build/bin/scratch
+
+  prep:
+    deps: [fmt]
+    cmds:
+      - go vet
+
+  fmt:
+    cmds:
+      - go mod tidy
+      - go fmt
+
+  clean:
+    cmds:
+      - wails clean
