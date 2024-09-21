@@ -48,7 +48,7 @@ func main() {
 		OnShutdown:        app.Shutdown,
 		WindowStartState:  options.Normal,
 		Bind: []interface{}{
-			app,
+			app.Api,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

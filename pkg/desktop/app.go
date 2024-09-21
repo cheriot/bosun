@@ -8,11 +8,14 @@ import (
 // App struct
 type App struct {
 	ctx context.Context
+	Api *FrontendApi
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		Api: &FrontendApi{},
+	}
 }
 
 // Startup is called at application startup
@@ -38,7 +41,10 @@ func (a *App) Shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
+type FrontendApi struct {
+}
+
 // Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
+func (fa *FrontendApi) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
