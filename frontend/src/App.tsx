@@ -20,18 +20,9 @@ const App: Component = () => {
     })
 
   return (
-    <div class={styles.App}>
-      <header class={styles.header}>
+    <div>
+      <header class={`section has-text-centered ${styles.header}`}>
         <img src={logo} class={styles.logo} alt="logo" />
-        <p>
-          {greeting()}
-        </p>
-        <p>
-          {greeting2()}
-        </p>
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
         <a
           class={styles.link}
           href="https://github.com/solidjs/solid"
@@ -42,6 +33,29 @@ const App: Component = () => {
         </a>
         <Counter />
       </header>
+
+      <div class="columns is-gapless">
+        <div class={`column is-narrow ${styles.column1}`}>
+          <aside class="menu">
+            <ul class="menu-list">
+              <li><a class={`is-active ${styles.tabMenuItem}`}>Dashboard</a></li>
+              <li><a class={styles.tabMenuItem}>Customers</a></li>
+            </ul>
+          </aside>
+        </div>
+
+        <div class={`column ${styles.column2}`}>
+          <p>
+            {greeting()}
+          </p>
+          <p>
+            {greeting2()}
+          </p>
+          <p>
+            Edit <code>src/App.tsx</code> and save to reload.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
@@ -54,7 +68,7 @@ function Counter() {
     <div>
       <span>Count: {count()}</span>{" "}
       {/* Only `count()` is updated when the button is clicked. */}
-      <button type="button" onClick={increment}>
+      <button type="button" class="button is-primary" onClick={increment}>
         Increment
       </button>
     </div>
