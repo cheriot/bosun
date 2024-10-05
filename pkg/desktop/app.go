@@ -13,8 +13,27 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
+	tabs := []Tab{
+		{
+			Id:           "adfasdf",
+			K8sContext:   "kind-test-cluster",
+			K8sNamespace: "istio-system",
+			Page:         "SelectContext",
+		},
+		{
+			Id:           ";lkjfdas",
+			K8sContext:   "kind-test-cluster",
+			K8sNamespace: "istio-system",
+			Page:         "SelectContext",
+		},
+	}
 	return &App{
-		Api: &FrontendApi{},
+		Api: &FrontendApi{
+			tabs: Tabs{
+				Current: tabs[0].Id,
+				All:     tabs,
+			},
+		},
 	}
 }
 
@@ -42,9 +61,31 @@ func (a *App) Shutdown(ctx context.Context) {
 }
 
 type FrontendApi struct {
+	tabs Tabs
+}
+
+type Tab struct {
+	Id           string
+	K8sContext   string
+	K8sNamespace string
+	Page         string
+}
+
+type Tabs struct {
+	Current string
+	All     []Tab
 }
 
 // Greet returns a greeting for the given name
 func (fa *FrontendApi) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
+}
+
+func (fa *FrontendApi) Tabs() Tabs {
+	return fa.tabs
+}
+
+func (fa *FrontendApi) SelectTab(id string) Tabs {
+	fa.tabs.Current = id
+	return fa.tabs
 }

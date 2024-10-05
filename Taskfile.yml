@@ -20,6 +20,8 @@ tasks:
     deps: [fmt]
     cmds:
       - go vet
+      # gocyclo, golint, ineffassign, misspell, gosec, staticcheck, go-critic
+      # several of the above via golangci-lint
 
   fmt:
     cmds:
@@ -28,4 +30,4 @@ tasks:
 
   clean:
     cmds:
-      - wails clean
+      - wails build -clean
