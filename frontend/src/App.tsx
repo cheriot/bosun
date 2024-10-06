@@ -13,18 +13,28 @@ import { Tabs, SelectTab } from '../wailsjs/go/desktop/FrontendApi';
 const App: Component = () => {
 
   const initialTabs = { all: [] }
-  const [tabs] = createResource(() => {
+  const [tabs, { mutate }] = createResource(() => {
     return Tabs()
   }, { initialValue: initialTabs })
 
+  const selectTab = (id: string) => {
+    SelectTab(id).then((tabs) => {
+      mutate(tabs)
+    })
+  }
+
   return (
     <div>
-      <TabbedBrowser tabs={tabs} />
+      <TabbedBrowser tabs={tabs} selectTab={selectTab} />
     </div>
   );
 };
 
-function TabbedBrowser(props: { tabs: Accessor<desktop.Tabs> }) {
+interface TabbedBrowserProps {
+  tabs: Accessor<desktop.Tabs>
+  selectTab: (id: string) => void
+}
+function TabbedBrowser(props: TabbedBrowserProps) {
   return (
     <div class="columns is-gapless">
       <div class={`column is-narrow ${styles.column1}`}>
@@ -36,7 +46,8 @@ function TabbedBrowser(props: { tabs: Accessor<desktop.Tabs> }) {
                 <li>
                   <a
                     class={styles.tabMenuItem}
-                    classList={{ 'is-active': props.tabs().Current === item.Id }}>
+                    classList={{ 'is-active': props.tabs().Current === item.Id }}
+                    onClick={[props.selectTab, item.Id]}>
                     <div>{item.K8sContext}</div> <div>{item.K8sNamespace}</div>
                   </a>
                 </li>
