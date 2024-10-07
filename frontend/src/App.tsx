@@ -8,7 +8,7 @@ import type { ResourceReturn, ResourceOptions } from "solid-js"
 import styles from './App.module.css';
 
 import { desktop } from '../wailsjs/go/models';
-import { Tabs, SelectTab } from '../wailsjs/go/desktop/FrontendApi';
+import { Tabs, SelectTab, NewTab } from '../wailsjs/go/desktop/FrontendApi';
 
 const App: Component = () => {
 
@@ -18,31 +18,34 @@ const App: Component = () => {
   }, { initialValue: initialTabs })
 
   const selectTab = (id: string) => {
-    SelectTab(id).then((tabs) => {
-      mutate(tabs)
-    })
+    SelectTab(id).then(mutate)
+  }
+
+  const newTab = () => {
+    NewTab().then(mutate)
   }
 
   return (
-    <div>
-      <TabbedBrowser tabs={tabs} selectTab={selectTab} />
-    </div>
+    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} />
   );
 };
+
 
 interface TabbedBrowserProps {
   tabs: Accessor<desktop.Tabs>
   selectTab: (id: string) => void
+  newTab: () => void
 }
 function TabbedBrowser(props: TabbedBrowserProps) {
   return (
     <div class="columns is-gapless">
+
+      {/* sidebar for tabs */}
       <div class={`column is-narrow ${styles.column1}`}>
         <aside class="menu">
           <ul class="menu-list">
             <For each={props.tabs().All}>
               {(item) =>
-                // rendering logic for each element
                 <li>
                   <a
                     class={styles.tabMenuItem}
@@ -53,10 +56,19 @@ function TabbedBrowser(props: TabbedBrowserProps) {
                 </li>
               }
             </For>
+
+            <li>
+              <a
+                class={`${styles.newTab} has-text-centered is-size-3`}
+                onClick={props.newTab}>
+                +
+              </a>
+            </li>
           </ul>
         </aside>
       </div>
 
+      {/* tab content for the selected tab*/}
       <For each={props.tabs().All}>
         {(item) =>
           <Show when={item.Id === props.tabs().Current}>

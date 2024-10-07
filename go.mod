@@ -3,6 +3,7 @@ module bosun
 go 1.23.1
 
 require (
+	github.com/dchest/uniuri v1.2.0
 	github.com/wailsapp/wails/v2 v2.9.1
 	k8s.io/client-go v0.31.1
 )

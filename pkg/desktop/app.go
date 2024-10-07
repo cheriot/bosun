@@ -3,6 +3,8 @@ package desktop
 import (
 	"context"
 	"fmt"
+
+	"github.com/dchest/uniuri"
 )
 
 // App struct
@@ -87,5 +89,29 @@ func (fa *FrontendApi) Tabs() Tabs {
 
 func (fa *FrontendApi) SelectTab(id string) Tabs {
 	fa.tabs.Current = id
+	return fa.tabs
+}
+
+func (fa *FrontendApi) currentTab() Tab {
+	for _, t := range fa.tabs.All {
+		if t.Id == fa.tabs.Current {
+			return t
+		}
+	}
+
+	panic(fmt.Sprintf("Unable to find current Tab %s", fa.tabs.Current))
+}
+
+func (fa *FrontendApi) NewTab() Tabs {
+	currentTab := fa.currentTab()
+
+	newTab := Tab{
+		Id:           uniuri.New(),
+		K8sContext:   currentTab.K8sContext,
+		K8sNamespace: currentTab.K8sNamespace,
+	}
+	fa.tabs.All = append(fa.tabs.All, newTab)
+
+	fa.SelectTab(newTab.Id)
 	return fa.tabs
 }

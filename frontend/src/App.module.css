@@ -19,14 +19,9 @@
   color: #b318f0;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+a.newTab {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 a.tabMenuItem {
