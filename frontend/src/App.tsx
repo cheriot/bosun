@@ -8,7 +8,7 @@ import type { ResourceReturn, ResourceOptions } from "solid-js"
 import styles from './App.module.css';
 
 import { desktop } from '../wailsjs/go/models';
-import { Tabs, SelectTab, NewTab } from '../wailsjs/go/desktop/FrontendApi';
+import { Tabs, SelectTab, CloseTab, NewTab } from '../wailsjs/go/desktop/FrontendApi';
 
 const App: Component = () => {
 
@@ -18,6 +18,7 @@ const App: Component = () => {
   }, { initialValue: initialTabs })
 
   const selectTab = (id: string) => {
+    console.log('selectTab')
     SelectTab(id).then(mutate)
   }
 
@@ -25,8 +26,13 @@ const App: Component = () => {
     NewTab().then(mutate)
   }
 
+  const closeTab = (id: string) => {
+    console.log('closeTab')
+    CloseTab(id).then(mutate)
+  }
+
   return (
-    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} />
+    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} />
   );
 };
 
@@ -35,6 +41,7 @@ interface TabbedBrowserProps {
   tabs: Accessor<desktop.Tabs>
   selectTab: (id: string) => void
   newTab: () => void
+  closeTab: (id: string) => void
 }
 function TabbedBrowser(props: TabbedBrowserProps) {
   return (
@@ -50,8 +57,20 @@ function TabbedBrowser(props: TabbedBrowserProps) {
                   <a
                     class={styles.tabMenuItem}
                     classList={{ 'is-active': props.tabs().Current === item.Id }}
-                    onClick={[props.selectTab, item.Id]}>
-                    <div>{item.K8sContext}</div> <div>{item.K8sNamespace}</div>
+                    on:click={() => {
+                      props.selectTab(item.Id)
+
+                    }}>
+                    <div>{item.K8sContext}</div>
+                    <div>{item.K8sNamespace}</div>
+                    <div
+                      class={styles.tabClose}
+                      on:click={(e: Event) => {
+                        e.stopPropagation()
+                        props.closeTab(item.Id)
+                      }}>
+                      ✖️
+                    </div>
                   </a>
                 </li>
               }
@@ -79,6 +98,9 @@ function TabbedBrowser(props: TabbedBrowserProps) {
           </Show>
         }
       </For>
+      <p>
+        {JSON.stringify(props.tabs())}
+      </p>
     </div>
   )
 }

@@ -1,10 +1,8 @@
 package desktop
 
 import (
+	"bosun/pkg/desktop/tabs"
 	"context"
-	"fmt"
-
-	"github.com/dchest/uniuri"
 )
 
 // App struct
@@ -15,7 +13,7 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	tabs := []Tab{
+	all := []tabs.Tab{
 		{
 			Id:           "adfasdf",
 			K8sContext:   "kind-test-cluster",
@@ -31,9 +29,9 @@ func NewApp() *App {
 	}
 	return &App{
 		Api: &FrontendApi{
-			tabs: Tabs{
-				Current: tabs[0].Id,
-				All:     tabs,
+			tabs: &tabs.Tabs{
+				Current: all[0].Id,
+				All:     all,
 			},
 		},
 	}
@@ -60,58 +58,4 @@ func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
 // Shutdown is called at application termination
 func (a *App) Shutdown(ctx context.Context) {
 	// Perform your teardown here
-}
-
-type FrontendApi struct {
-	tabs Tabs
-}
-
-type Tab struct {
-	Id           string
-	K8sContext   string
-	K8sNamespace string
-	Page         string
-}
-
-type Tabs struct {
-	Current string
-	All     []Tab
-}
-
-// Greet returns a greeting for the given name
-func (fa *FrontendApi) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
-func (fa *FrontendApi) Tabs() Tabs {
-	return fa.tabs
-}
-
-func (fa *FrontendApi) SelectTab(id string) Tabs {
-	fa.tabs.Current = id
-	return fa.tabs
-}
-
-func (fa *FrontendApi) currentTab() Tab {
-	for _, t := range fa.tabs.All {
-		if t.Id == fa.tabs.Current {
-			return t
-		}
-	}
-
-	panic(fmt.Sprintf("Unable to find current Tab %s", fa.tabs.Current))
-}
-
-func (fa *FrontendApi) NewTab() Tabs {
-	currentTab := fa.currentTab()
-
-	newTab := Tab{
-		Id:           uniuri.New(),
-		K8sContext:   currentTab.K8sContext,
-		K8sNamespace: currentTab.K8sNamespace,
-	}
-	fa.tabs.All = append(fa.tabs.All, newTab)
-
-	fa.SelectTab(newTab.Id)
-	return fa.tabs
 }
