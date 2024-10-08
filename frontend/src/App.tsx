@@ -1,5 +1,5 @@
 import type { Component, Accessor } from 'solid-js';
-import { createResource, Show } from "solid-js"
+import { createEffect, createResource, Show } from "solid-js"
 import { ParentProps } from 'solid-js';
 import { createSignal, createContext, useContext, For } from "solid-js";
 
@@ -7,10 +7,37 @@ import type { ResourceReturn, ResourceOptions } from "solid-js"
 
 import styles from './App.module.css';
 
-import { desktop } from '../wailsjs/go/models';
+import { tabs as desktop } from '../wailsjs/go/models';
 import { Tabs, SelectTab, CloseTab, NewTab } from '../wailsjs/go/desktop/FrontendApi';
+import { matchKeyboardEvent, cmdFromCustomEvent, EventName as KeyboardCmdEvent, KeyboardCmd } from './keyboardCmd';
 
 const App: Component = () => {
+  const [keyboardCmd, setKeyboardCmd] = createSignal(KeyboardCmd.Nothing, {
+    equals(prev, next) {
+      // never merge subsequent events
+      // Ex. Cmd+T three times should open three tabs
+      return false
+    },
+  })
+
+  window.addEventListener('keypress', (e: KeyboardEvent) => {
+    // meta key is command on mac
+    console.log('App', e.code, e.key, 'ctrl', e.ctrlKey, 'meta', e.metaKey, 'shift', e.shiftKey)
+    const cmd = matchKeyboardEvent(e)
+    if (cmd !== undefined) {
+      e.stopPropagation() // stops the "no handler" sound on desktop
+      e.preventDefault()
+      setKeyboardCmd(cmd)
+    }
+  })
+
+  window.addEventListener(KeyboardCmdEvent, (e: Event) => {
+    const cmd = cmdFromCustomEvent(e as CustomEvent)
+    setKeyboardCmd(cmd)
+  })
+
+  // do I need to clean up?
+  // onCleanup(() => window.removeEventListener)
 
   const initialTabs = { all: [] }
   const [tabs, { mutate }] = createResource(() => {
@@ -27,9 +54,25 @@ const App: Component = () => {
   }
 
   const closeTab = (id: string) => {
-    console.log('closeTab')
     CloseTab(id).then(mutate)
   }
+
+  createEffect(() => {
+    switch (keyboardCmd()) {
+      case undefined:
+        // initial value
+        break;
+      case KeyboardCmd.NewTab:
+        newTab()
+        break;
+      // case KeyboardCmd.CloseTab:
+      //   closeTab()
+      //   break;
+      default:
+        console.log('unknown cmd', keyboardCmd())
+        throw new Error('unknown keyboard cmd')
+    }
+  })
 
   return (
     <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} />
