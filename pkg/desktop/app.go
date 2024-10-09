@@ -13,26 +13,12 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	all := []tabs.Tab{
-		{
-			Id:           "adfasdf",
-			K8sContext:   "kind-test-cluster",
-			K8sNamespace: "istio-system",
-			Page:         "SelectContext",
-		},
-		{
-			Id:           ";lkjfdas",
-			K8sContext:   "kind-test-cluster",
-			K8sNamespace: "istio-system",
-			Page:         "SelectContext",
-		},
-	}
+	t := &tabs.Tabs{}
+	t.NewTab()
+
 	return &App{
 		Api: &FrontendApi{
-			tabs: &tabs.Tabs{
-				Current: all[0].Id,
-				All:     all,
-			},
+			tabs: t,
 		},
 	}
 }

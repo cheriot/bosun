@@ -2,6 +2,7 @@ package tabs
 
 import (
 	"fmt"
+
 	"github.com/dchest/uniuri"
 )
 
@@ -43,6 +44,22 @@ func (t *Tabs) CloseTab(id string) {
 	}
 }
 
+func (t *Tabs) PrevTab() {
+	found, currentIdx := t.findTab(t.Current)
+	if found {
+		n := wrapMod(currentIdx-1, len(t.All))
+		t.Current = t.All[n].Id
+	}
+}
+
+func (t *Tabs) NextTab() {
+	found, currentIdx := t.findTab(t.Current)
+	if found {
+		n := (currentIdx + 1) % len(t.All)
+		t.Current = t.All[n].Id
+	}
+}
+
 func (t *Tabs) findTab(id string) (bool, int) {
 	for i, t := range t.All {
 		if t.Id == id {
@@ -67,4 +84,13 @@ func (t *Tabs) NewTab() {
 
 	t.All = append(t.All, newTab)
 	t.SelectTab(newTab.Id)
+}
+
+func wrapMod(a, b int) int {
+	// behave like python's % where -1 wraps to the end
+	c := a % b
+	if c < 0 {
+		c += b
+	}
+	return c
 }

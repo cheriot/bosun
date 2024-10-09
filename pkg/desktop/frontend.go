@@ -29,6 +29,16 @@ func (fa *FrontendApi) CloseTab(id string) *tabs.Tabs {
 	return fa.tabs
 }
 
+func (fa *FrontendApi) PrevTab() *tabs.Tabs {
+	fa.tabs.PrevTab()
+	return fa.tabs
+}
+
+func (fa *FrontendApi) NextTab() *tabs.Tabs {
+	fa.tabs.NextTab()
+	return fa.tabs
+}
+
 func (fa *FrontendApi) NewTab() *tabs.Tabs {
 	fa.tabs.NewTab()
 	return fa.tabs

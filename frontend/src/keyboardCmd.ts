@@ -13,7 +13,7 @@ const matchers = [
     { cmd: KeyboardCmd.NewTab, match: { code: 'KeyT', metaKey: true, shiftKey: false } },
     { cmd: KeyboardCmd.CloseTab, match: { code: 'KeyW', metaKey: true, shiftKey: false } },
     { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketLeft', metaKey: true, shiftKey: true } },
-    { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
+    { cmd: KeyboardCmd.NextTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
     { cmd: KeyboardCmd.Nothing, match: { code: 'KeyB', metaKey: true, shiftKey: false } },
 ]
 

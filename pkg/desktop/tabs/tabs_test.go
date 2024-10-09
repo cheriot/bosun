@@ -51,6 +51,24 @@ func TestDeleteFirst(t *testing.T) {
 	assert.Equal(t, "three", tabs.Current)
 }
 
+func TestPrevTabMiddle(t *testing.T) {
+	tabs := threeTabs()
+	tabs.Current = "two"
+
+	tabs.PrevTab()
+
+	assert.Equal(t, "one", tabs.Current)
+}
+
+func TestPrevTabFirst(t *testing.T) {
+	tabs := threeTabs()
+	tabs.Current = "one"
+
+	tabs.PrevTab()
+
+	assert.Equal(t, "three", tabs.Current)
+}
+
 func threeTabs() Tabs {
 	return Tabs{
 		All: []Tab{

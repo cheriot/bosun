@@ -1,5 +1,5 @@
 import type { Component, Accessor } from 'solid-js';
-import { createEffect, createResource, Show } from "solid-js"
+import { createEffect, createResource, Show, on } from "solid-js"
 import { ParentProps } from 'solid-js';
 import { createSignal, createContext, useContext, For } from "solid-js";
 
@@ -8,7 +8,7 @@ import type { ResourceReturn, ResourceOptions } from "solid-js"
 import styles from './App.module.css';
 
 import { tabs as desktop } from '../wailsjs/go/models';
-import { Tabs, SelectTab, CloseTab, NewTab } from '../wailsjs/go/desktop/FrontendApi';
+import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab } from '../wailsjs/go/desktop/FrontendApi';
 import { matchKeyboardEvent, cmdFromCustomEvent, EventName as KeyboardCmdEvent, KeyboardCmd } from './keyboardCmd';
 
 const App: Component = () => {
@@ -21,11 +21,12 @@ const App: Component = () => {
   })
 
   window.addEventListener('keypress', (e: KeyboardEvent) => {
-    // meta key is command on mac
+    // OS specific meta key!
     console.log('App', e.code, e.key, 'ctrl', e.ctrlKey, 'meta', e.metaKey, 'shift', e.shiftKey)
     const cmd = matchKeyboardEvent(e)
     if (cmd !== undefined) {
-      e.stopPropagation() // stops the "no handler" sound on desktop
+      // stops the "no handler" sound on desktop
+      e.stopPropagation()
       e.preventDefault()
       setKeyboardCmd(cmd)
     }
@@ -57,22 +58,27 @@ const App: Component = () => {
     CloseTab(id).then(mutate)
   }
 
-  createEffect(() => {
-    switch (keyboardCmd()) {
-      case undefined:
-        // initial value
-        break;
+  createEffect(on(keyboardCmd, (keyboardCmd) => {
+    switch (keyboardCmd) {
       case KeyboardCmd.NewTab:
         newTab()
         break;
-      // case KeyboardCmd.CloseTab:
-      //   closeTab()
-      //   break;
+      case KeyboardCmd.CloseTab:
+        closeTab(tabs().Current)
+        break;
+      case KeyboardCmd.PrevTab:
+        console.log('prev')
+        PrevTab().then(mutate)
+        break;
+      case KeyboardCmd.NextTab:
+        console.log('next')
+        NextTab().then(mutate)
+        break;
       default:
-        console.log('unknown cmd', keyboardCmd())
+        console.log('unknown cmd', keyboardCmd)
         throw new Error('unknown keyboard cmd')
     }
-  })
+  }, { defer: true }))
 
   return (
     <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} />
