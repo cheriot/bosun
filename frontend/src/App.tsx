@@ -141,7 +141,6 @@ function TabbedBrowser(props: TabbedBrowserProps) {
         {(item) =>
           <Show when={item.Id === props.tabs().Current}>
             <div class='column'>
-              <p>tab content {item.Id} {item.Page}</p>
               <iframe src="tabcontent.html" />
             </div>
           </Show>

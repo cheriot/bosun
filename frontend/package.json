@@ -16,6 +16,8 @@
     "vite-plugin-solid": "^2.8.2"
   },
   "dependencies": {
+    "@solidjs/router": "^0.14.8",
     "solid-js": "^1.8.11"
-  }
-,"author":"Chris Heriot"}
+  },
+  "author": "Chris Heriot"
+}
