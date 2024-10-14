@@ -5,23 +5,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#000000" />
+  <link rel="shortcut icon" type="image/ico" href="/src/assets/favicon.ico" />
   <link rel="stylesheet" type="text/css" href="/src/assets/bulma.css" />
-
-  <meta name="wails-options" content="noautoinject" />
-  <script type="text/javascript">
-    if (window === window.top) {
-      console.log('redirect to tab container')
-      window.location = '/tabcontainer.html'
+  <title>Bosun</title>
+  <style>
+    #root {
+      padding-top: 44px;
     }
-    window.go = window.parent.go
-  </script>
+  </style>
+  <script src="/wails/ipc.js"></script>
+  <script src="/wails/runtime.js"></script>
+
 </head>
 
 <body>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
 
-  <script src="/src/index.tsx" type="module"></script>
+  <script src="/src/tabcontainer.tsx" type="module"></script>
 </body>
 
 </html>

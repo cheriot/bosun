@@ -5,7 +5,7 @@ import { createSignal, createContext, useContext, For } from "solid-js";
 
 import type { ResourceReturn, ResourceOptions } from "solid-js"
 
-import styles from './App.module.css';
+import styles from './Browser.module.css';
 
 import { tabs as desktop } from '../wailsjs/go/models';
 import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab } from '../wailsjs/go/desktop/FrontendApi';
@@ -141,14 +141,11 @@ function TabbedBrowser(props: TabbedBrowserProps) {
         {(item) =>
           <Show when={item.Id === props.tabs().Current}>
             <div class='column'>
-              <iframe src="tabcontent.html" />
+              <iframe src="/" />
             </div>
           </Show>
         }
       </For>
-      <p>
-        {JSON.stringify(props.tabs())}
-      </p>
     </div>
   )
 }

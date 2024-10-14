@@ -10,7 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        tabcontent: resolve(__dirname, 'tabcontent.html'),
+        tabcontent: resolve(__dirname, 'tabcontainer.html'),
       },
     },
   },
