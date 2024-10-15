@@ -93,6 +93,13 @@ interface TabbedBrowserProps {
   closeTab: (id: string) => void
 }
 function TabbedBrowser(props: TabbedBrowserProps) {
+
+  const iframeOnLoad = (e) => {
+    // Adjust the iframe height based on the size of the content.
+    const height = e.target.contentWindow.document.body.scrollHeight + 40
+    e.target.style.height = `${height}px`;
+  }
+
   return (
     <div class="columns is-gapless">
 
@@ -141,7 +148,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
         {(item) =>
           <Show when={item.Id === props.tabs().Current}>
             <div class='column'>
-              <iframe src="/" />
+              <iframe class={styles.content} src="/" onload={iframeOnLoad} />
             </div>
           </Show>
         }

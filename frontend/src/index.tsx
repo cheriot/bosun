@@ -5,6 +5,8 @@ import { Router, Route } from "@solidjs/router";
 import { matchKeyboardEvent, createCustomEvent } from './keyboardCmd';
 import { Layout } from './layout/Layout'
 import { SelectContext } from './pages/SelectContext';
+import { SelectNamespace } from './pages/SelectNamespace';
+import { NotFound } from './pages/NotFound';
 
 import './index.css';
 
@@ -17,6 +19,7 @@ import './index.css';
  */
 const TabContent: Component = () => {
 
+  // forward keyboard commands to the parent window
   const keypressListener = (e: KeyboardEvent) => {
     const keyboardCmd = matchKeyboardEvent(e)
     if (keyboardCmd !== undefined) {
@@ -31,6 +34,8 @@ const TabContent: Component = () => {
   return (
     <Router root={Layout}>
       <Route path="/" component={SelectContext} />
+      <Route path="/namespaces" component={SelectNamespace} />
+      <Route path="*404" component={NotFound} />
     </Router>
   )
 }

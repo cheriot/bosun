@@ -36,3 +36,7 @@ a.tabMenuItem {
 a.tabMenuItem:hover .tabClose {
   display: inline;
 }
+
+iframe.content {
+  width: 100%
+}
