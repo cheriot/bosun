@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"bosun/pkg/desktop/tabs"
+	"bosun/pkg/local"
 )
 
 type FrontendApi struct {
@@ -42,4 +43,8 @@ func (fa *FrontendApi) NextTab() *tabs.Tabs {
 func (fa *FrontendApi) NewTab() *tabs.Tabs {
 	fa.tabs.NewTab()
 	return fa.tabs
+}
+
+func (fa *FrontendApi) KubeContexts() []local.KubeContext {
+	return local.KubeContexts()
 }

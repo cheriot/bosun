@@ -1,4 +1,4 @@
-import type { Component, Accessor } from 'solid-js';
+import type { Component, Accessor, InitializedResourceOptions } from 'solid-js';
 import { createEffect, createResource, Show, on } from "solid-js"
 import { ParentProps } from 'solid-js';
 import { createSignal, createContext, useContext, For } from "solid-js";
@@ -40,10 +40,10 @@ const App: Component = () => {
   // do I need to clean up?
   // onCleanup(() => window.removeEventListener)
 
-  const initialTabs = { all: [] }
+  const emptyTabs = desktop.Tabs.createFrom({ All: [], Current: '' })
   const [tabs, { mutate }] = createResource(() => {
     return Tabs()
-  }, { initialValue: initialTabs })
+  }, { initialValue: emptyTabs })
 
   const selectTab = (id: string) => {
     console.log('selectTab')
