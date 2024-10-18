@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+// https://betterstack.com/community/guides/logging/logging-in-go/
+// TODO https://github.com/veqryn/slog-context
+// Maybe https://github.com/MDobak/go-xerrors
 var current = NewLogger(slog.LevelDebug)
 
 func NewLogger(level slog.Level) *slog.Logger {

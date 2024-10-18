@@ -96,8 +96,9 @@ function TabbedBrowser(props: TabbedBrowserProps) {
 
   const iframeOnLoad = (e) => {
     // Adjust the iframe height based on the size of the content.
-    const height = e.target.contentWindow.document.body.scrollHeight + 40
-    e.target.style.height = `${height}px`;
+    // const height = e.target.contentWindow.document.body.scrollHeight + 40
+    // e.target.style.height = `${height}px`;
+    // console.log('iframeOnLoad', e.target.style.height)
   }
 
   return (

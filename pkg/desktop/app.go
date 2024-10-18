@@ -1,14 +1,15 @@
 package desktop
 
 import (
-	"bosun/pkg/desktop/tabs"
 	"context"
+
+	"bosun/pkg/desktop/tabs"
 )
 
 // App struct
 type App struct {
 	ctx context.Context
-	Api *FrontendApi
+	api *FrontendApi
 }
 
 // NewApp creates a new App application struct
@@ -17,10 +18,12 @@ func NewApp() *App {
 	t.NewTab()
 
 	return &App{
-		Api: &FrontendApi{
-			tabs: t,
-		},
+		api: MakeFrontendApi(),
 	}
+}
+
+func (a *App) GetApi() *FrontendApi {
+	return a.api
 }
 
 // Startup is called at application startup

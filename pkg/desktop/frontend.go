@@ -1,14 +1,26 @@
 package desktop
 
 import (
+	"context"
 	"fmt"
 
 	"bosun/pkg/desktop/tabs"
+	"bosun/pkg/kube"
 	"bosun/pkg/local"
 )
 
 type FrontendApi struct {
-	tabs *tabs.Tabs
+	tabs  *tabs.Tabs
+	kubes *kube.Kubes
+}
+
+func MakeFrontendApi() *FrontendApi {
+	t := &tabs.Tabs{}
+	t.NewTab()
+	return &FrontendApi{
+		tabs:  t,
+		kubes: kube.MakeKube(),
+	}
 }
 
 // Greet returns a greeting for the given name
@@ -47,4 +59,21 @@ func (fa *FrontendApi) NewTab() *tabs.Tabs {
 
 func (fa *FrontendApi) KubeContexts() []local.KubeContext {
 	return local.KubeContexts()
+}
+
+func (fa *FrontendApi) KubeNamespaces(k8sCtx string) []string {
+	c, err := fa.kubes.GetOrMakeKubeCluster(k8sCtx)
+	if err != nil {
+		fmt.Printf("TODO log, emit event %v", err)
+		return []string{}
+	}
+
+	ns, err := c.KubeNamespaceList(context.Background())
+	if err != nil {
+		fmt.Printf("TODO log, emit event %v", err)
+		return []string{}
+	}
+
+	fmt.Printf("found ns %v", ns)
+	return ns
 }

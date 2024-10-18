@@ -53,7 +53,7 @@ func main() {
 		OnShutdown:       app.Shutdown,
 		WindowStartState: options.Normal,
 		Bind: []interface{}{
-			app.Api,
+			app.GetApi(),
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

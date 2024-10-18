@@ -26,7 +26,7 @@ tasks:
   fmt:
     cmds:
       - go mod tidy
-      - go fmt
+      - goimports -w -local bosun .
 
   test:
     deps: [fmt]
