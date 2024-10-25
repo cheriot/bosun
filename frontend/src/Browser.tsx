@@ -175,7 +175,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
       {/* tab content for the selected tab*/}
       <Index each={props.tabs().All}>
         {(item) =>
-          <Show when={item().Id === props.tabs().Current} fallback={<div>Loading...</div>}>
+          <Show when={item().Id === props.tabs().Current}>
             <div class='column'>
               <iframe id={item().Id} ref={activeIframe} class={styles.content} src="/" onload={iframeOnLoad} />
             </div>

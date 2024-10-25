@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
+
 	"bosun/pkg/desktop/tabs"
 	"bosun/pkg/kube"
 	"bosun/pkg/local"
 )
 
 type FrontendApi struct {
+	ctx   context.Context
 	tabs  *tabs.Tabs
 	kubes *kube.Kubes
 }
@@ -21,6 +24,10 @@ func MakeFrontendApi() *FrontendApi {
 		tabs:  t,
 		kubes: kube.MakeKube(),
 	}
+}
+
+func (fa *FrontendApi) SetCtx(ctx context.Context) {
+	fa.ctx = ctx
 }
 
 // Greet returns a greeting for the given name
@@ -81,4 +88,19 @@ func (fa *FrontendApi) KubeNamespaces(k8sCtx string) []string {
 
 	fmt.Printf("found ns %v", ns)
 	return ns
+}
+
+func (fa *FrontendApi) KubeResourceList(k8sctx string, k8sns string, query string) []kube.ResourceTable {
+	kubeCluster, err := fa.kubes.GetOrMakeKubeCluster(k8sctx)
+	if err != nil {
+		wailsruntime.LogErrorf(fa.ctx, "error getting cluster for name %s: %s", k8sctx, err.Error())
+		return []kube.ResourceTable{}
+	}
+
+	resourceTables, err := kubeCluster.Query(fa.ctx, k8sns, query)
+	if err != nil {
+		wailsruntime.LogErrorf(fa.ctx, "error during query for %s %s %s: %s", k8sctx, k8sns, query, err.Error())
+		// return the tables. Maybe the error is for only one of them.
+	}
+	return resourceTables
 }

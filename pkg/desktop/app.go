@@ -2,8 +2,6 @@ package desktop
 
 import (
 	"context"
-
-	"bosun/pkg/desktop/tabs"
 )
 
 // App struct
@@ -14,9 +12,6 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	t := &tabs.Tabs{}
-	t.NewTab()
-
 	return &App{
 		api: MakeFrontendApi(),
 	}
@@ -30,6 +25,7 @@ func (a *App) GetApi() *FrontendApi {
 func (a *App) Startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
+	a.api.ctx = ctx
 }
 
 // DomReady is called after front-end resources have been loaded

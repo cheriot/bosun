@@ -7,14 +7,14 @@ import { createEffect, createResource, Show, on, For } from "solid-js"
 export const SelectNamespace: Component = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const emptyTabs: Array<string> = []
-    const [namespaces, { mutate }] = createResource(() => {
+    const empty: Array<string> = []
+    const [namespaces] = createResource(() => {
         if (searchParams.k8sctx) {
             return KubeNamespaces(searchParams.k8sctx)
         }
         console.log('no k8sctx in query params')
         return Promise.resolve([])
-    }, { initialValue: emptyTabs })
+    }, { initialValue: empty })
 
     const resourcesPath = (ns: string) => `/resources?k8sctx=${searchParams.k8sctx}&k8sns=${ns}`
     return (

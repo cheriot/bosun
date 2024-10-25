@@ -1,8 +1,9 @@
 package local
 
 import (
-	blog "bosun/pkg/logging"
 	"sort"
+
+	blog "bosun/pkg/logging"
 
 	"k8s.io/client-go/tools/clientcmd"
 )
