@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	blog "bosun/pkg/logging"
@@ -76,9 +77,11 @@ func (kc *KubeCluster) KubeNamespaceList(ctx context.Context) ([]string, error) 
 		return []string{}, fmt.Errorf("unable to list namespaces for %s: %w", kc.name, err)
 	}
 
-	return lo.Map(nsList.Items, func(ns corev1.Namespace, _ int) string {
+	nss := lo.Map(nsList.Items, func(ns corev1.Namespace, _ int) string {
 		return ns.Name
-	}), nil
+	})
+	slices.Sort(nss)
+	return nss, nil
 }
 
 func fetchAllApiResources(restClientConfig *restclient.Config) ([]metav1.APIResource, error) {

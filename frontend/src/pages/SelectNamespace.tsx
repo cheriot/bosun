@@ -16,10 +16,17 @@ export const SelectNamespace: Component = () => {
         return Promise.resolve([])
     }, { initialValue: emptyTabs })
 
+    const resourcesPath = (ns: string) => `/resources?k8sctx=${searchParams.k8sctx}&k8sns=${ns}`
     return (
         <div>
-            <p>list namespaces from {searchParams.k8sctx}</p>
-            <p>{JSON.stringify(namespaces())}</p>
+            <p>namespaces from {searchParams.k8sctx}</p>
+            <div class="menu">
+                <ul class="menu-list">
+                    <For each={namespaces()}>
+                        {(ns) => <li><a href={resourcesPath(ns)}>{ns}</a></li>}
+                    </For>
+                </ul>
+            </div>
         </div>
     )
 }

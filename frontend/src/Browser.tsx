@@ -1,14 +1,14 @@
 import type { Component, Accessor, InitializedResourceOptions } from 'solid-js';
-import { createEffect, createResource, Show, on } from "solid-js"
+import { createEffect, createResource, Show, on, onCleanup } from "solid-js"
 import { ParentProps } from 'solid-js';
-import { createSignal, createContext, useContext, For } from "solid-js";
+import { createSignal, createContext, useContext, Index, For } from "solid-js";
 
 import type { ResourceReturn, ResourceOptions } from "solid-js"
 
 import styles from './Browser.module.css';
 
 import { tabs as desktop } from '../wailsjs/go/models';
-import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab } from '../wailsjs/go/desktop/FrontendApi';
+import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab, UpdateTab } from '../wailsjs/go/desktop/FrontendApi';
 import { matchKeyboardEvent, cmdFromCustomEvent, EventName as KeyboardCmdEvent, KeyboardCmd } from './keyboardCmd';
 
 const App: Component = () => {
@@ -57,6 +57,9 @@ const App: Component = () => {
   const closeTab = (id: string) => {
     CloseTab(id).then(mutate)
   }
+  const updateTab = (id: string, k8sctx: string, k8sns: string | null) => {
+    UpdateTab(id, k8sctx, k8sns || "").then(mutate)
+  }
 
   createEffect(on(keyboardCmd, (keyboardCmd) => {
     switch (keyboardCmd) {
@@ -81,7 +84,7 @@ const App: Component = () => {
   }, { defer: true }))
 
   return (
-    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} />
+    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} updateTab={updateTab} />
   );
 };
 
@@ -91,15 +94,40 @@ interface TabbedBrowserProps {
   selectTab: (id: string) => void
   newTab: () => void
   closeTab: (id: string) => void
+  updateTab: (id: string, k8sctx: string, k8sns: string | null) => void
 }
 function TabbedBrowser(props: TabbedBrowserProps) {
 
-  const iframeOnLoad = (e) => {
+  const iframeOnLoad = () => {
+    console.log('iframe onload')
     // Adjust the iframe height based on the size of the content.
     // const height = e.target.contentWindow.document.body.scrollHeight + 40
     // e.target.style.height = `${height}px`;
     // console.log('iframeOnLoad', e.target.style.height)
   }
+
+  let activeIframe: HTMLIFrameElement | undefined;
+
+  // Update tab ctx, ns based on iframe query params.
+  createEffect(on(props.tabs, () => {
+    const intId = setInterval(() => {
+      let k8sctx, k8sns;
+      const location = activeIframe?.contentWindow?.location
+      if (location) {
+        const searchParams = new URLSearchParams(location.search)
+        k8sctx = searchParams.get('k8sctx')
+        k8sns = searchParams.get('k8sns')
+        const id = activeIframe.id
+        if (k8sctx) {
+          props.updateTab(id, k8sctx, k8sns)
+        }
+      }
+    }, 1000)
+
+    onCleanup(() => {
+      clearInterval(intId)
+    })
+  }))
 
   return (
     <div class="columns is-gapless">
@@ -145,15 +173,15 @@ function TabbedBrowser(props: TabbedBrowserProps) {
       </div>
 
       {/* tab content for the selected tab*/}
-      <For each={props.tabs().All}>
+      <Index each={props.tabs().All}>
         {(item) =>
-          <Show when={item.Id === props.tabs().Current}>
+          <Show when={item().Id === props.tabs().Current} fallback={<div>Loading...</div>}>
             <div class='column'>
-              <iframe class={styles.content} src="/" onload={iframeOnLoad} />
+              <iframe id={item().Id} ref={activeIframe} class={styles.content} src="/" onload={iframeOnLoad} />
             </div>
           </Show>
         }
-      </For>
+      </Index>
     </div>
   )
 }

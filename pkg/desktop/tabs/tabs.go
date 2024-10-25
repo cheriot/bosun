@@ -15,7 +15,21 @@ type Tab struct {
 
 type Tabs struct {
 	Current string
-	All     []Tab
+	All     []*Tab
+}
+
+func (t *Tabs) Update(id string, k8sCtx string, k8sns string) {
+	found, idx := t.findTab(id)
+	if found {
+		tab := t.All[idx]
+		if k8sCtx != "" {
+			tab.K8sContext = k8sCtx
+		}
+		if k8sns != "" {
+			tab.K8sNamespace = k8sns
+		}
+	}
+
 }
 
 func (t *Tabs) SelectTab(id string) {
@@ -82,7 +96,7 @@ func (t *Tabs) NewTab() {
 		newTab.K8sNamespace = currentTab.K8sNamespace
 	}
 
-	t.All = append(t.All, newTab)
+	t.All = append(t.All, &newTab)
 	t.SelectTab(newTab.Id)
 }
 

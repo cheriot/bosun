@@ -52,6 +52,11 @@ func (fa *FrontendApi) NextTab() *tabs.Tabs {
 	return fa.tabs
 }
 
+func (fa *FrontendApi) UpdateTab(id string, k8sctx string, k8sns string) *tabs.Tabs {
+	fa.tabs.Update(id, k8sctx, k8sns)
+	return fa.tabs
+}
+
 func (fa *FrontendApi) NewTab() *tabs.Tabs {
 	fa.tabs.NewTab()
 	return fa.tabs

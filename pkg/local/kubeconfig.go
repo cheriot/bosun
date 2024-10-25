@@ -2,6 +2,7 @@ package local
 
 import (
 	blog "bosun/pkg/logging"
+	"sort"
 
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -33,5 +34,15 @@ func KubeContexts() []KubeContext {
 
 	log.Debug("returning", "kubeContexts", kubeContexts)
 
+	sort.SliceStable(kubeContexts, func(i int, j int) bool {
+		// Sort the active cluster first, the rest alphabetically desc
+		if kubeContexts[i].IsActive {
+			return true
+		}
+		if kubeContexts[j].IsActive {
+			return false
+		}
+		return kubeContexts[i].Name < kubeContexts[j].Name
+	})
 	return kubeContexts
 }
