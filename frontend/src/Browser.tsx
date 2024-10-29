@@ -1,7 +1,8 @@
 import type { Component, Accessor, InitializedResourceOptions } from 'solid-js';
-import { createEffect, createResource, Show, on, onCleanup } from "solid-js"
+import { createEffect, createResource, Show, on, onCleanup, untrack } from "solid-js"
 import { ParentProps } from 'solid-js';
 import { createSignal, createContext, useContext, Index, For } from "solid-js";
+import { Store, createStore, unwrap } from "solid-js/store"
 
 import type { ResourceReturn, ResourceOptions } from "solid-js"
 
@@ -22,7 +23,6 @@ const App: Component = () => {
 
   window.addEventListener('keypress', (e: KeyboardEvent) => {
     // OS specific meta key!
-    console.log('App', e.code, e.key, 'ctrl', e.ctrlKey, 'meta', e.metaKey, 'shift', e.shiftKey)
     const cmd = matchKeyboardEvent(e)
     if (cmd !== undefined) {
       // stops the "no handler" sound on desktop
@@ -36,29 +36,26 @@ const App: Component = () => {
     const cmd = cmdFromCustomEvent(e as CustomEvent)
     setKeyboardCmd(cmd)
   })
-
   // do I need to clean up?
   // onCleanup(() => window.removeEventListener)
 
-  const emptyTabs = desktop.Tabs.createFrom({ All: [], Current: '' })
-  const [tabs, { mutate }] = createResource(() => {
-    return Tabs()
-  }, { initialValue: emptyTabs })
+  const [tabs, setTabs] = createStore(desktop.Tabs.createFrom({ All: [], Current: '' }))
+  Tabs().then(setTabs)
 
   const selectTab = (id: string) => {
-    console.log('selectTab')
-    SelectTab(id).then(mutate)
+    SelectTab(id).then(setTabs)
   }
 
   const newTab = () => {
-    NewTab().then(mutate)
+    NewTab().then(setTabs)
   }
 
   const closeTab = (id: string) => {
-    CloseTab(id).then(mutate)
+    CloseTab(id).then(setTabs)
   }
-  const updateTab = (id: string, k8sctx: string, k8sns: string | null) => {
-    UpdateTab(id, k8sctx, k8sns || "").then(mutate)
+
+  const updateTab = (id: string, k8sCtx: string, k8sNs: string | null, path: string) => {
+    UpdateTab(id, k8sCtx, k8sNs || "", path).then(setTabs)
   }
 
   createEffect(on(keyboardCmd, (keyboardCmd) => {
@@ -67,15 +64,13 @@ const App: Component = () => {
         newTab()
         break;
       case KeyboardCmd.CloseTab:
-        closeTab(tabs().Current)
+        closeTab(tabs.Current)
         break;
       case KeyboardCmd.PrevTab:
-        console.log('prev')
-        PrevTab().then(mutate)
+        PrevTab().then(setTabs)
         break;
       case KeyboardCmd.NextTab:
-        console.log('next')
-        NextTab().then(mutate)
+        NextTab().then(setTabs)
         break;
       default:
         console.log('unknown cmd', keyboardCmd)
@@ -90,11 +85,11 @@ const App: Component = () => {
 
 
 interface TabbedBrowserProps {
-  tabs: Accessor<desktop.Tabs>
+  tabs: Store<desktop.Tabs>
   selectTab: (id: string) => void
   newTab: () => void
   closeTab: (id: string) => void
-  updateTab: (id: string, k8sctx: string, k8sns: string | null) => void
+  updateTab: (id: string, k8sCtx: string, k8sNs: string | null, path: string) => void
 }
 function TabbedBrowser(props: TabbedBrowserProps) {
 
@@ -106,27 +101,43 @@ function TabbedBrowser(props: TabbedBrowserProps) {
     // console.log('iframeOnLoad', e.target.style.height)
   }
 
-  let activeIframe: HTMLIFrameElement | undefined;
+  let iframeParent: HTMLDivElement | undefined;
 
   // Update tab ctx, ns based on iframe query params.
-  createEffect(on(props.tabs, () => {
-    const intId = setInterval(() => {
-      let k8sctx, k8sns;
-      const location = activeIframe?.contentWindow?.location
-      if (location) {
-        const searchParams = new URLSearchParams(location.search)
-        k8sctx = searchParams.get('k8sctx')
-        k8sns = searchParams.get('k8sns')
-        const id = activeIframe.id
-        if (k8sctx) {
-          props.updateTab(id, k8sctx, k8sns)
-        }
-      }
-    }, 1000)
+  createEffect(on(() => props.tabs.All, () => {
+    if (iframeParent) {
+      const activeIframe = iframeParent.querySelector(`iframe.active`)
+      if (activeIframe instanceof HTMLIFrameElement) {
 
-    onCleanup(() => {
-      clearInterval(intId)
-    })
+        const intId = setInterval(() => {
+          const location = activeIframe?.contentWindow?.location
+          if (location) {
+            const searchParams = new URLSearchParams(location.search)
+            let k8sCtx = searchParams.get('k8sCtx')
+            let k8sNs = searchParams.get('k8sNs')
+            const id = activeIframe.id
+            const path = location.pathname + location.search
+            const current = props.tabs.All.find((t) => t.Id == id)
+            if (!!current
+              && !!k8sCtx
+              && (
+                (k8sCtx != current.K8sContext)
+                || (!!k8sNs && (k8sNs != current.K8sNamespace))
+                || (!!path && (path != current.Path))
+              )) {
+              console.log('updateTab', !!current, !!k8sCtx)
+
+              // only update if something has changed!
+              props.updateTab(id, k8sCtx, k8sNs, path)
+            }
+          }
+        }, 30)
+
+        onCleanup(() => {
+          clearInterval(intId)
+        })
+      }
+    }
   }))
 
   return (
@@ -136,21 +147,21 @@ function TabbedBrowser(props: TabbedBrowserProps) {
       <div class={`column is-narrow ${styles.column1}`}>
         <aside class="menu">
           <ul class="menu-list">
-            <For each={props.tabs().All}>
+            <For each={props.tabs.All}>
               {(item) =>
                 <li>
                   <a
                     class={styles.tabMenuItem}
-                    classList={{ 'is-active': props.tabs().Current === item.Id }}
-                    on:click={() => {
+                    classList={{ 'is-active': props.tabs.Current === item.Id }}
+                    onclick={() => {
                       props.selectTab(item.Id)
-
                     }}>
                     <div>{item.K8sContext}</div>
                     <div>{item.K8sNamespace}</div>
+                    <div>{item.Id}</div>
                     <div
                       class={styles.tabClose}
-                      on:click={(e: Event) => {
+                      onclick={(e: Event) => {
                         e.stopPropagation()
                         props.closeTab(item.Id)
                       }}>
@@ -172,16 +183,26 @@ function TabbedBrowser(props: TabbedBrowserProps) {
         </aside>
       </div>
 
-      {/* tab content for the selected tab*/}
-      <Index each={props.tabs().All}>
-        {(item) =>
-          <Show when={item().Id === props.tabs().Current}>
-            <div class='column'>
-              <iframe id={item().Id} ref={activeIframe} class={styles.content} src="/" onload={iframeOnLoad} />
-            </div>
-          </Show>
-        }
-      </Index>
+      {/* tab content for the selected tab */}
+      <div class='column' ref={iframeParent}>
+        <Index each={props.tabs.All}>
+          {(item) =>
+            <div classList={{
+              [styles.hidden]: item().Id != props.tabs.Current,
+              [styles.content]: true
+            }}>{item().Path}</div>
+          }
+        </Index>
+        <Index each={props.tabs.All}>
+          {(item) =>
+            <iframe classList={{
+              [styles.hidden]: untrack(item).Id != props.tabs.Current,
+              'active': untrack(item).Id == props.tabs.Current,
+              [styles.content]: true
+            }} id={untrack(item).Id} src={untrack(item).Path} onload={iframeOnLoad} />
+          }
+        </Index>
+      </div>
     </div>
   )
 }

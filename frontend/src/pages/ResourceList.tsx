@@ -5,31 +5,50 @@ import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
 
+import styles from './ResourceList.module.css';
+import { CtxNsQuery, ResourcesQuery } from '../models/navpaths';
+
+
+const fetchResources = (source: ResourcesQuery) => {
+    if (source.k8sCtx && source.query) {
+        return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
+    }
+    console.log('not enough params to list resources')
+    return Promise.resolve([])
+}
+
 export const ResourceList: Component = () => {
 
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
 
-    const empty: Array<kube.ResourceTable> = []
-    const [tables] = createResource(() => {
-        if (searchParams.k8sctx) {
-            return KubeResourceList(searchParams.k8sctx, searchParams.k8sns || "", "all")
+    const resourceQuery = () => {
+        if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query) {
+            return {
+                k8sCtx: searchParams.k8sCtx,
+                k8sNs: searchParams.k8sNs,
+                query: searchParams.query
+            }
         }
-        console.log('no k8sctx in query params')
-        return Promise.resolve([])
-    }, { initialValue: empty })
+        return
+    }
+    const [tables] = createResource(
+        resourceQuery,
+        fetchResources,
+        { initialValue: [] },
+    )
 
     return (
         <div>
-            <p>{searchParams.k8sctx}/{searchParams.k8sns}</p>
+            <p>{searchParams.query}</p>
             <For each={tables()}>
                 {(table) =>
                     <Show when={table.table?.rows.length && table.table.rows.length > 0}>
-                        <p>{table.apiResource.name}</p>
+                        <p class="is-size-4">{table.apiResource.name}</p>
                         <table class="table is-striped">
                             <thead><tr>
                                 <For each={table.table?.columnDefinitions}>
                                     {(def) =>
-                                        <th>{def.name}</th>
+                                        <th class={styles.columnHeader}>{def.name}</th>
                                     }
                                 </For>
                             </tr></thead>

@@ -9,7 +9,7 @@ export const SelectContext: Component = () => {
         return KubeContexts()
     }, { initialValue: emptyTabs })
 
-    const selectPath = (c: local.KubeContext) => `/namespaces?k8sctx=${c.Name}`
+    const selectPath = (c: local.KubeContext) => `/namespaces?k8sCtx=${c.Name}`
 
     return (
         <div>

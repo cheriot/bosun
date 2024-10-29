@@ -59,8 +59,8 @@ func (fa *FrontendApi) NextTab() *tabs.Tabs {
 	return fa.tabs
 }
 
-func (fa *FrontendApi) UpdateTab(id string, k8sctx string, k8sns string) *tabs.Tabs {
-	fa.tabs.Update(id, k8sctx, k8sns)
+func (fa *FrontendApi) UpdateTab(id string, k8sCtx string, k8sNs string, path string) *tabs.Tabs {
+	fa.tabs.Update(id, k8sCtx, k8sNs, path)
 	return fa.tabs
 }
 
@@ -90,16 +90,16 @@ func (fa *FrontendApi) KubeNamespaces(k8sCtx string) []string {
 	return ns
 }
 
-func (fa *FrontendApi) KubeResourceList(k8sctx string, k8sns string, query string) []kube.ResourceTable {
-	kubeCluster, err := fa.kubes.GetOrMakeKubeCluster(k8sctx)
+func (fa *FrontendApi) KubeResourceList(k8sCtx string, k8sNs string, query string) []kube.ResourceTable {
+	kubeCluster, err := fa.kubes.GetOrMakeKubeCluster(k8sCtx)
 	if err != nil {
-		wailsruntime.LogErrorf(fa.ctx, "error getting cluster for name %s: %s", k8sctx, err.Error())
+		wailsruntime.LogErrorf(fa.ctx, "error getting cluster for name %s: %s", k8sCtx, err.Error())
 		return []kube.ResourceTable{}
 	}
 
-	resourceTables, err := kubeCluster.Query(fa.ctx, k8sns, query)
+	resourceTables, err := kubeCluster.Query(fa.ctx, k8sNs, query)
 	if err != nil {
-		wailsruntime.LogErrorf(fa.ctx, "error during query for %s %s %s: %s", k8sctx, k8sns, query, err.Error())
+		wailsruntime.LogErrorf(fa.ctx, "error during query for %s %s %s: %s", k8sCtx, k8sNs, query, err.Error())
 		// return the tables. Maybe the error is for only one of them.
 	}
 	return resourceTables

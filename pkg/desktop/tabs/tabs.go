@@ -10,7 +10,7 @@ type Tab struct {
 	Id           string
 	K8sContext   string
 	K8sNamespace string
-	Page         string
+	Path         string
 }
 
 type Tabs struct {
@@ -18,15 +18,18 @@ type Tabs struct {
 	All     []*Tab
 }
 
-func (t *Tabs) Update(id string, k8sCtx string, k8sns string) {
+func (t *Tabs) Update(id string, k8sCtx string, k8sNs string, path string) {
 	found, idx := t.findTab(id)
 	if found {
 		tab := t.All[idx]
 		if k8sCtx != "" {
 			tab.K8sContext = k8sCtx
 		}
-		if k8sns != "" {
-			tab.K8sNamespace = k8sns
+		if k8sNs != "" {
+			tab.K8sNamespace = k8sNs
+		}
+		if path != "" {
+			tab.Path = path
 		}
 	}
 
@@ -86,7 +89,8 @@ func (t *Tabs) findTab(id string) (bool, int) {
 
 func (t *Tabs) NewTab() {
 	newTab := Tab{
-		Id: uniuri.New(),
+		Id:   uniuri.New(),
+		Path: "/",
 	}
 
 	found, currentIdx := t.findTab(t.Current)
@@ -94,6 +98,7 @@ func (t *Tabs) NewTab() {
 		currentTab := t.All[currentIdx]
 		newTab.K8sContext = currentTab.K8sContext
 		newTab.K8sNamespace = currentTab.K8sNamespace
+		newTab.Path = currentTab.Path
 	}
 
 	t.All = append(t.All, &newTab)

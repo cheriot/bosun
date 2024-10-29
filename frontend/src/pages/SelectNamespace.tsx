@@ -1,25 +1,23 @@
 import { type Component } from 'solid-js';
 import { KubeNamespaces } from '../../wailsjs/go/desktop/FrontendApi';
-import { local } from '../../wailsjs/go/models';
 import { useSearchParams } from "@solidjs/router";
-import { createEffect, createResource, Show, on, For } from "solid-js"
+import { createResource, For } from "solid-js"
 
 export const SelectNamespace: Component = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
 
-    const empty: Array<string> = []
     const [namespaces] = createResource(() => {
-        if (searchParams.k8sctx) {
-            return KubeNamespaces(searchParams.k8sctx)
+        if (searchParams.k8sCtx) {
+            return KubeNamespaces(searchParams.k8sCtx)
         }
-        console.log('no k8sctx in query params')
+        console.log('no k8sCtx in query params')
         return Promise.resolve([])
-    }, { initialValue: empty })
+    }, { initialValue: [] })
 
-    const resourcesPath = (ns: string) => `/resources?k8sctx=${searchParams.k8sctx}&k8sns=${ns}`
+    const resourcesPath = (ns: string) => `/resources?k8sCtx=${searchParams.k8sCtx}&k8sNs=${ns}&query=all`
     return (
         <div>
-            <p>namespaces from {searchParams.k8sctx}</p>
+            <p>namespaces from {searchParams.k8sCtx}</p>
             <div class="menu">
                 <ul class="menu-list">
                     <For each={namespaces()}>
