@@ -25,9 +25,8 @@ const App: Component = () => {
     // OS specific meta key!
     const cmd = matchKeyboardEvent(e)
     if (cmd !== undefined) {
-      // stops the "no handler" sound on desktop
       e.stopPropagation()
-      e.preventDefault()
+      e.preventDefault() // stops the "no handler" sound on desktop
       setKeyboardCmd(cmd)
     }
   })
@@ -106,7 +105,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
   // Update tab ctx, ns based on iframe query params.
   createEffect(on(() => props.tabs.All, () => {
     if (iframeParent) {
-      const activeIframe = iframeParent.querySelector(`iframe.active`)
+      const activeIframe = iframeParent.querySelector(`iframe.${styles.active}`)
       if (activeIframe instanceof HTMLIFrameElement) {
 
         const intId = setInterval(() => {
@@ -144,8 +143,8 @@ function TabbedBrowser(props: TabbedBrowserProps) {
     <div class="columns is-gapless">
 
       {/* sidebar for tabs */}
-      <div class={`column is-narrow ${styles.column1}`}>
-        <aside class="menu">
+      <div class="column is-narrow">
+        <aside class={`menu ${styles.tabList}`}>
           <ul class="menu-list">
             <For each={props.tabs.All}>
               {(item) =>
@@ -185,19 +184,18 @@ function TabbedBrowser(props: TabbedBrowserProps) {
 
       {/* tab content for the selected tab */}
       <div class='column' ref={iframeParent}>
-        <Index each={props.tabs.All}>
+        {/* <Index each={props.tabs.All}>
           {(item) =>
             <div classList={{
-              [styles.hidden]: item().Id != props.tabs.Current,
-              [styles.content]: true
+              [styles.active]: item().Id == props.tabs.Current,
+              [styles.debugPath]: true
             }}>{item().Path}</div>
           }
-        </Index>
+        </Index> */}
         <Index each={props.tabs.All}>
           {(item) =>
             <iframe classList={{
-              [styles.hidden]: untrack(item).Id != props.tabs.Current,
-              'active': untrack(item).Id == props.tabs.Current,
+              [styles.active]: untrack(item).Id == props.tabs.Current,
               [styles.content]: true
             }} id={untrack(item).Id} src={untrack(item).Path} onload={iframeOnLoad} />
           }

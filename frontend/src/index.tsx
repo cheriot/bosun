@@ -8,7 +8,6 @@ import { SelectContext } from './pages/SelectContext';
 import { SelectNamespace } from './pages/SelectNamespace';
 import { NotFound } from './pages/NotFound';
 
-import './index.css';
 import { ResourceList } from './pages/ResourceList';
 
 /**
@@ -24,7 +23,8 @@ const TabContent: Component = () => {
   const keypressListener = (e: KeyboardEvent) => {
     const keyboardCmd = matchKeyboardEvent(e)
     if (keyboardCmd !== undefined) {
-      e.stopPropagation() // stops the "no handler" sound on desktop
+      e.stopPropagation()
+      e.preventDefault() // stops the "no handler" sound on desktop
       window.parent.dispatchEvent(createCustomEvent(keyboardCmd))
     }
   }

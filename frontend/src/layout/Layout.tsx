@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "@solidjs/router";
 import { CtxNsQuery, pathContexts, pathNamespaces, pathResources } from "../models/navpaths";
 import { createEffect, createResource, Show, on, For } from "solid-js"
 
+import styles from './Layout.module.css'
+
 const Layout: Component = (props: ParentProps) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -40,26 +42,28 @@ const Layout: Component = (props: ParentProps) => {
 
     return (
         <>
-            <div class="columns">
-                <div class='column is-narrow'>
-                    <nav class="breadcrumb" aria-label="breadcrumbs">
-                        <ul>
-                            <For each={breadcrumbs()}>
-                                {(b) =>
-                                    <li><a href={b.path}>{b.name}</a></li>
-                                }
-                            </For>
-                        </ul>
-                    </nav>
-                </div>
-                <div class='column'>
-                    <input class="input"
-                        type="text"
-                        placeholder="all, pods, services"
-                        onchange={onchange}></input>
+            <div class={`section pb-5 ${styles.navSection}`}>
+                <div class="columns is-vcentered">
+                    <div class='column is-narrow'>
+                        <nav class="breadcrumb" aria-label="breadcrumbs">
+                            <ul>
+                                <For each={breadcrumbs()}>
+                                    {(b) =>
+                                        <li><a href={b.path}>{b.name}</a></li>
+                                    }
+                                </For>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class='column'>
+                        <input class={`input ${styles.queryInput}`}
+                            type="text"
+                            placeholder="all, pods, services"
+                            onchange={onchange}></input>
+                    </div>
                 </div>
             </div>
-            <div>{props.children}</div>
+            <div class={`section ${styles.pageBody}`}>{props.children}</div>
         </>
     )
 }

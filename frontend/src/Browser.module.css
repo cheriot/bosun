@@ -1,12 +1,5 @@
-.header {
-  min-height: 80vh;
-  background-color: #282c34;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.tabList {
+  margin-top: 44px;
 }
 
 .link {
@@ -37,11 +30,19 @@ a.tabMenuItem:hover .tabClose {
   display: inline;
 }
 
-iframe.content {
-  width: 100%;
-  height: 99.3vh;
+.debugPath {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.hidden {
+.content {
+  width: 100%;
+  height: 99.3vh;
   display: none;
+}
+
+.active {
+  display: block;
 }

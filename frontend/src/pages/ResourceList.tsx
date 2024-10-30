@@ -37,13 +37,19 @@ export const ResourceList: Component = () => {
         { initialValue: [] },
     )
 
+    const formatApiResource = (apiResource: { group?: string, version?: string }): string => {
+        if (!apiResource.group) {
+            return apiResource.version || ""
+        }
+        return `${apiResource.group}/${apiResource.version}`
+    }
     return (
         <div>
-            <p>{searchParams.query}</p>
+            <p class="is-size-3 has-text-weight-semibold mb-4">{searchParams.query}</p>
             <For each={tables()}>
                 {(table) =>
                     <Show when={table.table?.rows.length && table.table.rows.length > 0}>
-                        <p class="is-size-4">{table.apiResource.name}</p>
+                        <p class="is-size-5">{table.apiResource.name} <span>{formatApiResource(table.apiResource)}</span></p>
                         <table class="table is-striped">
                             <thead><tr>
                                 <For each={table.table?.columnDefinitions}>
@@ -69,8 +75,6 @@ export const ResourceList: Component = () => {
                     </Show>
                 }
             </For>
-            <br />
-            <pre>{JSON.stringify(tables(), null, 4)}</pre>
         </div>
     )
 }
