@@ -7,13 +7,17 @@ export const pathContexts = (params: CtxNsQuery) =>
 export const pathNamespaces = (params: CtxNsQuery) =>
     `/namespaces${toQueryString(params)}`
 
-export type ResourcesQuery = CtxNsQuery & {
+export type ClusterQuery = { k8sCtx: string, k8sNs: string }
+
+export type ResourcesQuery = ClusterQuery & {
     query: string
 }
 export const pathResources = (params: ResourcesQuery) =>
     `/resources${toQueryString(params)}`
 
-export type ResourceQuery = CtxNsQuery & {
+export type ResourceQuery = ClusterQuery & {
+    group: string
+    kind: string
     name: string
 }
 export const pathResource = (params: ResourceQuery) =>
@@ -25,8 +29,4 @@ const toQueryString = (params: Record<string, string>) => {
         return `?${serialized}`
     }
     return ''
-}
-
-const example = () => {
-    pathContexts({ k8sCtx: 'foo' })
 }

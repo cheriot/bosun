@@ -104,3 +104,18 @@ func (fa *FrontendApi) KubeResourceList(k8sCtx string, k8sNs string, query strin
 	}
 	return resourceTables
 }
+
+func (fa *FrontendApi) KubeResource(k8sCtx string, k8sNs string, group string, kind string, name string) *kube.Resource {
+	kubeCluster, err := fa.kubes.GetOrMakeKubeCluster(k8sCtx)
+	if err != nil {
+		wailsruntime.LogErrorf(fa.ctx, "error getting cluster for name %s: %s", k8sCtx, err.Error())
+		return &kube.Resource{}
+	}
+
+	r, err := kubeCluster.GetResource(fa.ctx, k8sNs, group, kind, name)
+	if err != nil {
+		wailsruntime.LogErrorf(fa.ctx, "error getting resource %s %s %s %s: %s", k8sCtx, k8sNs, kind, name, err.Error())
+		return &kube.Resource{}
+	}
+	return r
+}

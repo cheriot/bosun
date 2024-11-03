@@ -4,24 +4,19 @@ import { useSearchParams } from "@solidjs/router";
 import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
+import { ResourcesQuery, pathResource } from '../models/navpaths';
 
 import styles from './ResourceList.module.css';
-import { CtxNsQuery, ResourcesQuery, ResourceQuery, pathResource } from '../models/navpaths';
-
 
 const fetchResources = (source: ResourcesQuery) => {
-    if (source.k8sCtx && source.query) {
-        return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
-    }
-    console.log('not enough params to list resources')
-    return Promise.resolve([])
+    return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
 }
 
 export const ResourceList: Component = () => {
 
     const [searchParams] = useSearchParams();
 
-    const resourceQuery = () => {
+    const resourceQuery = (): ResourcesQuery | undefined => {
         if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query) {
             return {
                 k8sCtx: searchParams.k8sCtx,
@@ -44,11 +39,13 @@ export const ResourceList: Component = () => {
         return `${apiResource.group}/${apiResource.version}`
     }
 
-    const resourceCell = (cell: string, idx: number, tableRowNames: Array<string>) => {
-        if (idx == 0) {
+    const resourceCell = (cell: string, idx: number, tableRowNames: Array<string>, group: string, kind: string) => {
+        if (idx == 0 && searchParams.k8sCtx && searchParams.k8sNs) {
             const params = {
                 k8sCtx: searchParams.k8sCtx,
                 k8sNs: searchParams.k8sNs,
+                group: group,
+                kind: kind,
                 name: tableRowNames[idx],
             }
             return <a href={pathResource(params)}>{cell}</a>
@@ -78,7 +75,7 @@ export const ResourceList: Component = () => {
                                             <For each={row.cells}>
                                                 {(cell, i) =>
                                                     <td>
-                                                        {resourceCell(cell, i(), table.tableRowNames)}
+                                                        {resourceCell(cell, i(), table.tableRowNames, table.apiResource.group || "", table.apiResource.kind)}
                                                     </td>
                                                 }
                                             </For>
@@ -90,7 +87,6 @@ export const ResourceList: Component = () => {
                     </Show>
                 }
             </For>
-            <pre>{JSON.stringify(tables(), null, 4)}</pre>
         </div>
     )
 }
