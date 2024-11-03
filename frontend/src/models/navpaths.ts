@@ -13,6 +13,12 @@ export type ResourcesQuery = CtxNsQuery & {
 export const pathResources = (params: ResourcesQuery) =>
     `/resources${toQueryString(params)}`
 
+export type ResourceQuery = CtxNsQuery & {
+    name: string
+}
+export const pathResource = (params: ResourceQuery) =>
+    `/resource${toQueryString(params)}`
+
 const toQueryString = (params: Record<string, string>) => {
     const serialized = new URLSearchParams(params).toString()
     if (serialized != '') {

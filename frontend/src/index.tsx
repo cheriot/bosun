@@ -6,9 +6,9 @@ import { matchKeyboardEvent, createCustomEvent } from './keyboardCmd';
 import { Layout } from './layout/Layout'
 import { SelectContext } from './pages/SelectContext';
 import { SelectNamespace } from './pages/SelectNamespace';
-import { NotFound } from './pages/NotFound';
-
 import { ResourceList } from './pages/ResourceList';
+import { Resource } from './pages/Resource';
+import { NotFound } from './pages/NotFound';
 
 /**
  * The outer element of a single page app.
@@ -44,6 +44,7 @@ const TabContent: Component = () => {
       <Route path="/" component={SelectContext} />
       <Route path="/namespaces" component={SelectNamespace} />
       <Route path="/resources" component={ResourceList} />
+      <Route path="/resource" component={Resource} />
       <Route path="*404" component={NotFound} />
     </Router>
   )

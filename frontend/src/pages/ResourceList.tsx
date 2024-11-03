@@ -6,7 +6,7 @@ import { kube } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
 
 import styles from './ResourceList.module.css';
-import { CtxNsQuery, ResourcesQuery } from '../models/navpaths';
+import { CtxNsQuery, ResourcesQuery, ResourceQuery, pathResource } from '../models/navpaths';
 
 
 const fetchResources = (source: ResourcesQuery) => {
@@ -43,6 +43,19 @@ export const ResourceList: Component = () => {
         }
         return `${apiResource.group}/${apiResource.version}`
     }
+
+    const resourceCell = (cell: string, idx: number, tableRowNames: Array<string>) => {
+        if (idx == 0) {
+            const params = {
+                k8sCtx: searchParams.k8sCtx,
+                k8sNs: searchParams.k8sNs,
+                name: tableRowNames[idx],
+            }
+            return <a href={pathResource(params)}>{cell}</a>
+        }
+        return cell
+    }
+
     return (
         <div>
             <p class="is-size-3 has-text-weight-semibold mb-4">{searchParams.query}</p>
@@ -63,8 +76,10 @@ export const ResourceList: Component = () => {
                                     {(row) =>
                                         <tr>
                                             <For each={row.cells}>
-                                                {(cell) =>
-                                                    <td>{cell}</td>
+                                                {(cell, i) =>
+                                                    <td>
+                                                        {resourceCell(cell, i(), table.tableRowNames)}
+                                                    </td>
                                                 }
                                             </For>
                                         </tr>
@@ -75,6 +90,7 @@ export const ResourceList: Component = () => {
                     </Show>
                 }
             </For>
+            <pre>{JSON.stringify(tables(), null, 4)}</pre>
         </div>
     )
 }
