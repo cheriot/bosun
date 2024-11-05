@@ -5,6 +5,7 @@ import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
 import { ResourcesQuery, pathResource } from '../models/navpaths';
+import { createCustomEvent } from '../models/pageMeta';
 
 import styles from './ResourceList.module.css';
 
@@ -15,6 +16,15 @@ const fetchResources = (source: ResourcesQuery) => {
 export const ResourceList: Component = () => {
 
     const [searchParams] = useSearchParams();
+
+    createEffect(() => {
+        window.parent.dispatchEvent(createCustomEvent(
+            window.tabId,
+            window.location,
+            searchParams.query || "",
+            searchParams
+        ))
+    })
 
     const resourceQuery = (): ResourcesQuery | undefined => {
         if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query) {

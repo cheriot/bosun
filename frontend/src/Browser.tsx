@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import type { Component, Accessor, InitializedResourceOptions } from 'solid-js';
 import { createEffect, createResource, Show, on, onCleanup, untrack } from "solid-js"
 import { ParentProps } from 'solid-js';
@@ -10,7 +11,8 @@ import styles from './Browser.module.css';
 
 import { tabs as desktop } from '../wailsjs/go/models';
 import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab, UpdateTab } from '../wailsjs/go/desktop/FrontendApi';
-import { matchKeyboardEvent, cmdFromCustomEvent, EventName as KeyboardCmdEvent, KeyboardCmd } from './keyboardCmd';
+import { detailFromCustomEvent, EventName as TabUpdateEvent } from './models/pageMeta';
+import { matchKeyboardEvent, cmdFromCustomEvent, EventName as KeyboardCmdEvent, KeyboardCmd } from './models/keyboardCmd';
 
 const App: Component = () => {
   const [keyboardCmd, setKeyboardCmd] = createSignal(KeyboardCmd.Nothing, {
@@ -35,6 +37,12 @@ const App: Component = () => {
     const cmd = cmdFromCustomEvent(e as CustomEvent)
     setKeyboardCmd(cmd)
   })
+
+  window.addEventListener(TabUpdateEvent, (e: Event) => {
+    const pageMeta = detailFromCustomEvent(e as CustomEvent)
+    console.log('pageMeta received', pageMeta)
+    updateTab(pageMeta.id, pageMeta.k8sCtx, pageMeta.k8sNs, pageMeta.path, pageMeta.title)
+  })
   // do I need to clean up?
   // onCleanup(() => window.removeEventListener)
 
@@ -53,8 +61,11 @@ const App: Component = () => {
     CloseTab(id).then(setTabs)
   }
 
-  const updateTab = (id: string, k8sCtx: string, k8sNs: string | null, path: string) => {
-    UpdateTab(id, k8sCtx, k8sNs || "", path).then(setTabs)
+  const updateTab = (id: string, k8sCtx: string | undefined, k8sNs: string | undefined, path: string, title: string) => {
+    UpdateTab(id, k8sCtx || "", k8sNs || "", path, title).then((tabs) => {
+      console.log('updated tab', tabs)
+      setTabs(tabs)
+    })
   }
 
   createEffect(on(keyboardCmd, (keyboardCmd) => {
@@ -78,7 +89,7 @@ const App: Component = () => {
   }, { defer: true }))
 
   return (
-    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} updateTab={updateTab} />
+    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} />
   );
 };
 
@@ -88,56 +99,80 @@ interface TabbedBrowserProps {
   selectTab: (id: string) => void
   newTab: () => void
   closeTab: (id: string) => void
-  updateTab: (id: string, k8sCtx: string, k8sNs: string | null, path: string) => void
 }
 function TabbedBrowser(props: TabbedBrowserProps) {
 
   const iframeOnLoad = () => {
     console.log('iframe onload')
-    // Adjust the iframe height based on the size of the content.
-    // const height = e.target.contentWindow.document.body.scrollHeight + 40
-    // e.target.style.height = `${height}px`;
-    // console.log('iframeOnLoad', e.target.style.height)
   }
 
   let iframeParent: HTMLDivElement | undefined;
 
-  // Update tab ctx, ns based on iframe query params.
-  createEffect(on(() => props.tabs.All, () => {
-    if (iframeParent) {
-      const activeIframe = iframeParent.querySelector(`iframe.${styles.active}`)
-      if (activeIframe instanceof HTMLIFrameElement) {
+  // createEffect(() => {
+  //   // Manage lifecycle of iframes.
+  //   // 1. don't set iframe#src after creation (it triggers a page reload and loses scroll state)
+  //   // 2. set src query's tabId so children can identify themselves
+  //   // It's undefined afaik on whether this function will be called before or after JSX has
+  //   // rendered so handle both.
+  //   if (iframeParent) {
+  //     const allContainers = iframeParent.querySelectorAll(`.iframeContainer`)
 
-        const intId = setInterval(() => {
-          const location = activeIframe?.contentWindow?.location
-          if (location) {
-            const searchParams = new URLSearchParams(location.search)
-            let k8sCtx = searchParams.get('k8sCtx')
-            let k8sNs = searchParams.get('k8sNs')
-            const id = activeIframe.id
-            const path = location.pathname + location.search
-            const current = props.tabs.All.find((t) => t.Id == id)
-            if (!!current
-              && !!k8sCtx
-              && (
-                (k8sCtx != current.K8sContext)
-                || (!!k8sNs && (k8sNs != current.K8sNamespace))
-                || (!!path && (path != current.Path))
-              )) {
-              console.log('updateTab', !!current, !!k8sCtx)
+  //     const containerById: { [key: string]: Element } = {}
+  //     allContainers.forEach((container) => {
+  //       const id = container.getAttribute('id')
+  //       if (id) {
+  //         containerById[id] = container
+  //       } else {
+  //         console.log('unexpected values id, iframe', id, container)
+  //       }
+  //     })
 
-              // only update if something has changed!
-              props.updateTab(id, k8sCtx, k8sNs, path)
-            }
-          }
-        }, 30)
+  //     const tabsById: { [key: string]: desktop.Tab } = {}
+  //     if (props.tabs.All) {
+  //       props.tabs.All.forEach((t) => tabsById[t.Id] = t)
+  //     }
 
-        onCleanup(() => {
-          clearInterval(intId)
-        })
-      }
-    }
-  }))
+  //     // Changes required
+  //     const toCreate: Array<desktop.Tab> = _.filter(tabsById, (t) => containerById[t.Id] == undefined)
+  //     const toDelete: Array<string> = _.filter(Object.keys(containerById), (id) => tabsById[id] == undefined)
+  //     console.log('iframe changes', toDelete, toCreate, 'from', Object.keys(containerById), Object.keys(tabsById))
+
+  //     toCreate.forEach(t => {
+  //       const newIframe = document.createElement('iframe')
+  //       newIframe.setAttribute('id', t.Id)
+  //       newIframe.classList.add(styles.content)
+  //       newIframe.setAttribute('src', pathWithTabId(t.Path, t.Id))
+
+  //       const newContainer = document.createElement('div')
+  //       newContainer.setAttribute('id', t.Id)
+  //       newContainer.classList.add('iframeContainer')
+  //       if (props.tabs.Current != t.Id) {
+  //         newContainer.classList.add('is-hidden')
+  //       }
+  //       newContainer.appendChild(newIframe)
+  //       iframeParent.appendChild(newContainer)
+  //     });
+
+  //     toDelete.forEach(id => {
+  //       iframeParent.removeChild(containerById[id])
+  //     })
+
+  //     // Only update visibility. Never update iframe#src.
+  //     // Since only one iframe is visible at a time, order doesn't matter.
+  //     Object.entries(containerById).forEach(([id, iframe]) => {
+  //       if (id == props.tabs.Current && iframe.classList.contains('is-hidden')) {
+  //         iframe.classList.remove('is-hidden')
+  //       }
+  //       if (id != props.tabs.Current && !iframe.classList.contains('is-hidden')) {
+  //         iframe.classList.add('is-hidden')
+  //       }
+  //     });
+
+  //   } else {
+  //     console.log('no iframeParent')
+  //     // setTimeout? to wait for iframeParent?
+  //   }
+  // })
 
   return (
     <div class="columns is-gapless">
@@ -155,9 +190,9 @@ function TabbedBrowser(props: TabbedBrowserProps) {
                     onclick={() => {
                       props.selectTab(item.Id)
                     }}>
-                    <div>{item.K8sContext}</div>
+                    <div>{item.Title}</div>
                     <div>{item.K8sNamespace}</div>
-                    <div>{item.Id}</div>
+                    <div>{item.K8sContext}</div>
                     <div
                       class={styles.tabClose}
                       onclick={(e: Event) => {
@@ -184,25 +219,42 @@ function TabbedBrowser(props: TabbedBrowserProps) {
 
       {/* tab content for the selected tab */}
       <div class='column' ref={iframeParent}>
-        {/* <Index each={props.tabs.All}>
-          {(item) =>
-            <div classList={{
-              [styles.active]: item().Id == props.tabs.Current,
-              [styles.debugPath]: true
-            }}>{item().Path}</div>
-          }
-        </Index> */}
         <Index each={props.tabs.All}>
           {(item) =>
-            <iframe classList={{
-              [styles.active]: untrack(item).Id == props.tabs.Current,
-              [styles.content]: true
-            }} id={untrack(item).Id} src={untrack(item).Path} onload={iframeOnLoad} />
+            <div classList={{ 'is-hidden': item().Id != props.tabs.Current }}>
+              <iframe
+                id={untrack(item).Id}
+                class={styles.content}
+                src={pathWithTabId(untrack(item).Path, untrack(item).Id)}
+                onload={iframeOnLoad} />
+            </div>
           }
         </Index>
       </div>
     </div>
   )
+}
+
+const pathWithTabId = (path: string, tabId: string): string => {
+  let modifiedPath = path
+  if (!path) {
+    modifiedPath = `?tabId=${tabId}`
+  } else {
+    let qIdx = path.indexOf('?')
+    if (qIdx == -1) {
+      modifiedPath = path + `?tabId=${tabId}`
+    } else {
+      const pre = path.substring(0, qIdx)
+      const post = path.substring(qIdx)
+      const urlSearchParams = new URLSearchParams(post)
+      // A new tab will get the path of the previous tab, which may have a tabId.
+      urlSearchParams.delete('tabId')
+      urlSearchParams.append('tabId', tabId)
+      modifiedPath = pre + '?' + urlSearchParams.toString()
+    }
+  }
+
+  return modifiedPath
 }
 
 

@@ -4,13 +4,24 @@ import { useSearchParams } from "@solidjs/router";
 import { ResourceQuery } from '../models/navpaths';
 import { KubeResource } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
+import { createCustomEvent } from '../models/pageMeta';
 
 const fetchResource = (source: ResourceQuery): Promise<kube.Resource> => {
     console.log('fetchResource', source)
     return KubeResource(source.k8sCtx, source.k8sNs, source.group, source.kind, source.name)
 }
+
 export const Resource: Component = () => {
     const [searchParams] = useSearchParams();
+
+    createEffect(() => {
+        window.parent.dispatchEvent(createCustomEvent(
+            window.tabId,
+            window.location,
+            searchParams.kind || "",
+            searchParams
+        ))
+    })
 
     const resourceQuery = (): ResourceQuery | undefined => {
         if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.kind && searchParams.name) {

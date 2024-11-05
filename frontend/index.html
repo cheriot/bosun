@@ -10,10 +10,15 @@
   <meta name="wails-options" content="noautoinject" />
   <script type="text/javascript">
     if (window === window.top) {
+      // The root path is for tab content so client side routing is simpler.
       console.log('redirect to tab container')
       window.location = '/tabcontainer.html'
     }
     window.go = window.parent.go
+
+    // Allow updates of this tab's PageMeta to identify which tab they come from.
+    const urlSearchParams = new URLSearchParams(location.search)
+    window.tabId = urlSearchParams.get('tabId')
   </script>
 </head>
 

@@ -40,9 +40,4 @@ a.tabMenuItem:hover .tabClose {
 .content {
   width: 100%;
   height: 99.3vh;
-  display: none;
-}
-
-.active {
-  display: block;
 }

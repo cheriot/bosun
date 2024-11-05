@@ -3,7 +3,7 @@
 }
 
 .queryInput {
-    width: 25em;
+    max-width: 25em;
 }
 
 .pageBody {
