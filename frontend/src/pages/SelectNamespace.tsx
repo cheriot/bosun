@@ -1,17 +1,19 @@
 import { type Component } from 'solid-js';
 import { KubeNamespaces } from '../../wailsjs/go/desktop/FrontendApi';
-import { useSearchParams } from "@solidjs/router";
-import { createResource, For } from "solid-js"
+import { useSearchParams, useLocation } from "@solidjs/router";
+import { createEffect, createResource, For } from "solid-js"
 import { createCustomEvent } from '../models/pageMeta';
 
 export const SelectNamespace: Component = () => {
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const k8sCtx = () => searchParams.k8sCtx
 
     createEffect(() => {
+        console.log(location.pathname, location.search)
         window.parent.dispatchEvent(createCustomEvent(
             window.tabId,
-            window.location,
+            location,
             'Select Namespace',
             searchParams
         ))

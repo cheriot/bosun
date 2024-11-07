@@ -40,7 +40,6 @@ const App: Component = () => {
 
   window.addEventListener(TabUpdateEvent, (e: Event) => {
     const pageMeta = detailFromCustomEvent(e as CustomEvent)
-    console.log('pageMeta received', pageMeta)
     updateTab(pageMeta.id, pageMeta.k8sCtx, pageMeta.k8sNs, pageMeta.path, pageMeta.title)
   })
   // do I need to clean up?
@@ -63,7 +62,6 @@ const App: Component = () => {
 
   const updateTab = (id: string, k8sCtx: string | undefined, k8sNs: string | undefined, path: string, title: string) => {
     UpdateTab(id, k8sCtx || "", k8sNs || "", path, title).then((tabs) => {
-      console.log('updated tab', tabs)
       setTabs(tabs)
     })
   }
@@ -108,71 +106,70 @@ function TabbedBrowser(props: TabbedBrowserProps) {
 
   let iframeParent: HTMLDivElement | undefined;
 
-  // createEffect(() => {
-  //   // Manage lifecycle of iframes.
-  //   // 1. don't set iframe#src after creation (it triggers a page reload and loses scroll state)
-  //   // 2. set src query's tabId so children can identify themselves
-  //   // It's undefined afaik on whether this function will be called before or after JSX has
-  //   // rendered so handle both.
-  //   if (iframeParent) {
-  //     const allContainers = iframeParent.querySelectorAll(`.iframeContainer`)
+  createEffect(() => {
+    // Manage lifecycle of iframes.
+    // 1. don't set iframe#src after creation (it triggers a page reload and loses scroll state)
+    // 2. set src query's tabId so children can identify themselves
+    // It's undefined afaik on whether this function will be called before or after JSX has
+    // rendered so handle both.
+    if (iframeParent) {
+      const allContainers = iframeParent.querySelectorAll(`.iframeContainer`)
 
-  //     const containerById: { [key: string]: Element } = {}
-  //     allContainers.forEach((container) => {
-  //       const id = container.getAttribute('id')
-  //       if (id) {
-  //         containerById[id] = container
-  //       } else {
-  //         console.log('unexpected values id, iframe', id, container)
-  //       }
-  //     })
+      const containerById: { [key: string]: Element } = {}
+      allContainers.forEach((container) => {
+        const id = container.getAttribute('id')
+        if (id) {
+          containerById[id] = container
+        } else {
+          console.log('unexpected values id, iframe', id, container)
+        }
+      })
 
-  //     const tabsById: { [key: string]: desktop.Tab } = {}
-  //     if (props.tabs.All) {
-  //       props.tabs.All.forEach((t) => tabsById[t.Id] = t)
-  //     }
+      const tabsById: { [key: string]: desktop.Tab } = {}
+      if (props.tabs.All) {
+        props.tabs.All.forEach((t) => tabsById[t.Id] = t)
+      }
 
-  //     // Changes required
-  //     const toCreate: Array<desktop.Tab> = _.filter(tabsById, (t) => containerById[t.Id] == undefined)
-  //     const toDelete: Array<string> = _.filter(Object.keys(containerById), (id) => tabsById[id] == undefined)
-  //     console.log('iframe changes', toDelete, toCreate, 'from', Object.keys(containerById), Object.keys(tabsById))
+      // Changes required
+      const toCreate: Array<desktop.Tab> = _.filter(tabsById, (t) => containerById[t.Id] == undefined)
+      const toDelete: Array<string> = _.filter(Object.keys(containerById), (id) => tabsById[id] == undefined)
 
-  //     toCreate.forEach(t => {
-  //       const newIframe = document.createElement('iframe')
-  //       newIframe.setAttribute('id', t.Id)
-  //       newIframe.classList.add(styles.content)
-  //       newIframe.setAttribute('src', pathWithTabId(t.Path, t.Id))
+      toCreate.forEach(t => {
+        const newIframe = document.createElement('iframe')
+        newIframe.setAttribute('id', t.Id)
+        newIframe.classList.add(styles.content)
+        newIframe.setAttribute('src', pathWithTabId(t.Path, t.Id))
 
-  //       const newContainer = document.createElement('div')
-  //       newContainer.setAttribute('id', t.Id)
-  //       newContainer.classList.add('iframeContainer')
-  //       if (props.tabs.Current != t.Id) {
-  //         newContainer.classList.add('is-hidden')
-  //       }
-  //       newContainer.appendChild(newIframe)
-  //       iframeParent.appendChild(newContainer)
-  //     });
+        const newContainer = document.createElement('div')
+        newContainer.setAttribute('id', t.Id)
+        newContainer.classList.add('iframeContainer')
+        if (props.tabs.Current != t.Id) {
+          newContainer.classList.add('is-hidden')
+        }
+        newContainer.appendChild(newIframe)
+        iframeParent.appendChild(newContainer)
+      });
 
-  //     toDelete.forEach(id => {
-  //       iframeParent.removeChild(containerById[id])
-  //     })
+      toDelete.forEach(id => {
+        iframeParent.removeChild(containerById[id])
+      })
 
-  //     // Only update visibility. Never update iframe#src.
-  //     // Since only one iframe is visible at a time, order doesn't matter.
-  //     Object.entries(containerById).forEach(([id, iframe]) => {
-  //       if (id == props.tabs.Current && iframe.classList.contains('is-hidden')) {
-  //         iframe.classList.remove('is-hidden')
-  //       }
-  //       if (id != props.tabs.Current && !iframe.classList.contains('is-hidden')) {
-  //         iframe.classList.add('is-hidden')
-  //       }
-  //     });
+      // Only update visibility. Never update iframe#src.
+      // Since only one iframe is visible at a time, order doesn't matter.
+      Object.entries(containerById).forEach(([id, iframe]) => {
+        if (id == props.tabs.Current && iframe.classList.contains('is-hidden')) {
+          iframe.classList.remove('is-hidden')
+        }
+        if (id != props.tabs.Current && !iframe.classList.contains('is-hidden')) {
+          iframe.classList.add('is-hidden')
+        }
+      });
 
-  //   } else {
-  //     console.log('no iframeParent')
-  //     // setTimeout? to wait for iframeParent?
-  //   }
-  // })
+    } else {
+      console.log('no iframeParent')
+      // setTimeout? to wait for iframeParent?
+    }
+  })
 
   return (
     <div class="columns is-gapless">
@@ -219,7 +216,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
 
       {/* tab content for the selected tab */}
       <div class='column' ref={iframeParent}>
-        <Index each={props.tabs.All}>
+        {/* <Index each={props.tabs.All}>
           {(item) =>
             <div classList={{ 'is-hidden': item().Id != props.tabs.Current }}>
               <iframe
@@ -229,7 +226,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
                 onload={iframeOnLoad} />
             </div>
           }
-        </Index>
+        </Index> */}
       </div>
     </div>
   )

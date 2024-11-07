@@ -1,6 +1,7 @@
 // Set the page title and other meta data used by tabs and navigation.
 
 import { CtxNsQuery } from "./navpaths"
+import { type Location } from "@solidjs/router";
 
 const EventName = "pageMetaCmd"
 
