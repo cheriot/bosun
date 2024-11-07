@@ -15,7 +15,7 @@ export const Resource: Component = () => {
     const [searchParams] = useSearchParams();
 
     createEffect(() => {
-        setPageTitle('Select Context', location, searchParams)
+        setPageTitle(searchParams.name || "", location, searchParams)
     })
 
     const resourceQuery = (): ResourceQuery | undefined => {
@@ -28,7 +28,7 @@ export const Resource: Component = () => {
                 name: searchParams.name
             }
         }
-        console.log('not enough query parameters to fetch a resource', searchParams)
+        console.error('not enough query parameters to fetch a resource', searchParams)
         return
     }
 
@@ -40,7 +40,8 @@ export const Resource: Component = () => {
     return (
         <div>
             <pre>{resource().describe}</pre>
-            <p>Yaml</p>
+            <br />
+            <br />
             <pre>{resource().yaml}</pre>
         </div>
     )
