@@ -4,10 +4,9 @@ import { useSearchParams, useLocation } from "@solidjs/router";
 import { ResourceQuery } from '../models/navpaths';
 import { KubeResource } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
-import { createCustomEvent } from '../models/pageMeta';
+import { setPageTitle } from '../models/pageMeta';
 
 const fetchResource = (source: ResourceQuery): Promise<kube.Resource> => {
-    console.log('fetchResource', source)
     return KubeResource(source.k8sCtx, source.k8sNs, source.group, source.kind, source.name)
 }
 
@@ -16,13 +15,7 @@ export const Resource: Component = () => {
     const [searchParams] = useSearchParams();
 
     createEffect(() => {
-        console.log('Resource', location.pathname, location.search)
-        window.parent.dispatchEvent(createCustomEvent(
-            window.tabId,
-            location,
-            searchParams.kind || "",
-            searchParams
-        ))
+        setPageTitle('Select Context', location, searchParams)
     })
 
     const resourceQuery = (): ResourceQuery | undefined => {

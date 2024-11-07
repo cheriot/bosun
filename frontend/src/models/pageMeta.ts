@@ -11,19 +11,32 @@ type PageMeta = CtxNsQuery & {
     title: string
 }
 
-const createCustomEvent = (id: string, location: Location, title: string, searchParams: CtxNsQuery): CustomEvent => {
-    const pageMeta: PageMeta = {
-        k8sCtx: searchParams.k8sCtx,
-        k8sNs: searchParams.k8sNs,
-        id: id,
-        path: location.pathname + location.search,
-        title: title,
+const setPageTitle = (title: string, location: Location, searchParams: CtxNsQuery) => {
+    if (window.tabId && window.top) {
+        const pageMeta = {
+            k8sCtx: searchParams.k8sCtx,
+            k8sNs: searchParams.k8sNs,
+            id: window.tabId,
+            path: location.pathname + location.search,
+            title: title,
+        }
+        console.log('dispatch event', pageMeta)
+        window.top.dispatchEvent(createCustomEvent(pageMeta))
+    } else {
+        console.error('setting state without tabId', window.tabId, !!window.top)
     }
-
-    return new CustomEvent(EventName, { detail: pageMeta })
 }
+
+const createCustomEvent = (pageMeta: PageMeta): CustomEvent =>
+    new CustomEvent(EventName, { detail: pageMeta })
 
 const detailFromCustomEvent = (e: CustomEvent): PageMeta =>
     e.detail
 
-export { EventName, createCustomEvent, detailFromCustomEvent }
+export { EventName, setPageTitle, detailFromCustomEvent }
+
+declare global {
+    interface Window {
+        tabId: string | undefined
+    }
+}

@@ -3,20 +3,15 @@ import { useSearchParams, useLocation } from "@solidjs/router";
 import { KubeContexts } from '../../wailsjs/go/desktop/FrontendApi';
 import { local } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
-import { createCustomEvent } from '../models/pageMeta';
+import { setPageTitle } from '../models/pageMeta';
+import { currentTabId } from "../models/tabState";
 
 export const SelectContext: Component = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
 
     createEffect(() => {
-        console.log(location.pathname, location.search)
-        window.parent.dispatchEvent(createCustomEvent(
-            window.tabId,
-            location,
-            'Select Context',
-            searchParams
-        ))
+        setPageTitle('Select Context', location, searchParams)
     })
 
     const emptyTabs: Array<local.KubeContext> = []

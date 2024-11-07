@@ -2,7 +2,7 @@ import { type Component } from 'solid-js';
 import { KubeNamespaces } from '../../wailsjs/go/desktop/FrontendApi';
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { createEffect, createResource, For } from "solid-js"
-import { createCustomEvent } from '../models/pageMeta';
+import { setPageTitle } from '../models/pageMeta';
 
 export const SelectNamespace: Component = () => {
     const location = useLocation();
@@ -10,19 +10,13 @@ export const SelectNamespace: Component = () => {
     const k8sCtx = () => searchParams.k8sCtx
 
     createEffect(() => {
-        console.log(location.pathname, location.search)
-        window.parent.dispatchEvent(createCustomEvent(
-            window.tabId,
-            location,
-            'Select Namespace',
-            searchParams
-        ))
+        setPageTitle('Select Context', location, searchParams)
     })
 
     const [namespaces] = createResource(() => {
-        const c = k8sCtx()
-        if (c) {
-            return KubeNamespaces(c)
+        const ctx = k8sCtx()
+        if (ctx) {
+            return KubeNamespaces(ctx)
         }
         console.log('no k8sCtx in query params')
         return Promise.resolve([])
