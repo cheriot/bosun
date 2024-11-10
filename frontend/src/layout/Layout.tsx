@@ -30,6 +30,7 @@ const Layout: Component = (props: ParentProps) => {
 
     const onchange = (e: Event) => {
         if (e.target && e.target instanceof HTMLInputElement) {
+            // TODO handle missing ctx/ns or hide input
             const path = pathResources({
                 k8sCtx: searchParams.k8sCtx,
                 k8sNs: searchParams.k8sNs,
@@ -37,15 +38,16 @@ const Layout: Component = (props: ParentProps) => {
             })
             navigate(path)
             e.target.value = ''
+            e.target.blur()
         }
         e.preventDefault()
     }
 
-    let commandInput: HTMLInputElement | undefined
-
     setMatchers([
         { cmd: KeyboardCmd.FocusCommand, match: { code: 'Semicolon', metaKey: false, shiftKey: true } },
     ])
+
+    let commandInput: HTMLInputElement | undefined
 
     createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
         switch (keyboardCmd) {

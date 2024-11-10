@@ -12,7 +12,7 @@ enum KeyboardCmd {
     CloseTab,
     PrevTab,
     NextTab,
-    FocusCommand, // TODO
+    FocusCommand,
 }
 
 export type Key = {
@@ -43,13 +43,14 @@ export const addMachers = (additional: Array<Matcher>) => {
 type OtherWindowDispatcher = (e: CustomEvent) => void
 type KeyboardListener = (e: KeyboardEvent) => void
 export const makeKeypressListener = (f: OtherWindowDispatcher): KeyboardListener => {
-    return (e: KeyboardEvent) => {
-        const target = e.target as HTMLElement
-        const keyboardCmd = matchKeyboardEvent(e)
 
-        if (keyboardCmd || target.tagName != "INPUT") {
+    return (e: KeyboardEvent) => {
+        const isInputElement = (e.target as HTMLElement)?.tagName == "INPUT"
+        const keyboardCmd = matchKeyboardEvent(e)
+        if (keyboardCmd || !isInputElement) {
             // stops the "no handler" sound on desktop
-            // stops the keyboard command from being typed into a focused input
+            // stops the keyboard command : from being typed into the focused input
+            // do not call this for input elements because it prevents entering text
             e.preventDefault()
         }
 
