@@ -229,12 +229,12 @@ const renderTabIframes = (iframeParent: Element, all: Array<desktop.Tab>, curren
   Object.entries(frameById).forEach(([id, iframe]) => {
     if (id == current) {
       activeIframe = iframe
-      if (iframe.classList.contains('is-hidden')) {
-        iframe.classList.remove('is-hidden')
+      if (iframe.classList.contains(styles.inactive)) {
+        iframe.classList.remove(styles.inactive)
       }
     }
-    if (id != current && !iframe.classList.contains('is-hidden')) {
-      iframe.classList.add('is-hidden')
+    if (id != current && !iframe.classList.contains(styles.inactive)) {
+      iframe.classList.add(styles.inactive)
     }
   });
 
