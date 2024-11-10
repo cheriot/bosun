@@ -41,9 +41,16 @@ const Layout: Component = (props: ParentProps) => {
         e.preventDefault()
     }
 
+    let commandInput: HTMLInputElement | undefined
+
+    setMatchers([
+        { cmd: KeyboardCmd.FocusCommand, match: { code: 'Semicolon', metaKey: false, shiftKey: true } },
+    ])
+
     createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
         switch (keyboardCmd) {
-            case KeyboardCmd.NewTab:
+            case KeyboardCmd.FocusCommand:
+                commandInput?.focus()
                 break;
             default:
                 throw new Error('unknown keyboard cmd ' + keyboardCmd)
@@ -67,6 +74,7 @@ const Layout: Component = (props: ParentProps) => {
                     </div>
                     <div class='column'>
                         <input class={`input ${styles.queryInput}`}
+                            ref={commandInput}
                             type="text"
                             placeholder="all, pods, services"
                             onchange={onchange}></input>
