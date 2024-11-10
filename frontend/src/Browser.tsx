@@ -1,43 +1,36 @@
 import _ from 'lodash';
 import type { Component, Accessor, InitializedResourceOptions } from 'solid-js';
 import { createEffect, createResource, Show, on, onCleanup, untrack } from "solid-js"
-import { ParentProps } from 'solid-js';
 import { createSignal, createContext, useContext, Index, For } from "solid-js";
-import { Store, createStore, unwrap } from "solid-js/store"
-
-import type { ResourceReturn, ResourceOptions } from "solid-js"
+import { Store, createStore } from "solid-js/store"
 
 import styles from './Browser.module.css';
 
 import { tabs as desktop } from '../wailsjs/go/models';
 import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab, UpdateTab } from '../wailsjs/go/desktop/FrontendApi';
 import { detailFromCustomEvent, EventName as TabUpdateEvent } from './models/pageMeta';
-import { matchKeyboardEvent, cmdFromCustomEvent, EventName as KeyboardCmdEvent, KeyboardCmd } from './models/keyboardCmd';
+import { KeyboardCmd, matchers, Matcher, setMatchers, OtherWindowKeypressEvent, makeKeypressListener, otherWindowListener, currentKeyboardCmd } from './models/keyboardCmd';
 
+/**
+ * Outer element of a single page app.
+ *
+ * @returns JSX for the outer window of a tabbed browser
+ */
 const App: Component = () => {
-  const [keyboardCmd, setKeyboardCmd] = createSignal(KeyboardCmd.Nothing, {
-    equals(prev, next) {
-      // never merge subsequent events
-      // Ex. Cmd+T three times should open three tabs
-      return false
-    },
+
+  const tabMatchers: Array<Matcher> = [
+    { cmd: KeyboardCmd.NewTab, match: { code: 'KeyT', metaKey: true, shiftKey: false } },
+    { cmd: KeyboardCmd.CloseTab, match: { code: 'KeyW', metaKey: true, shiftKey: false } },
+    { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketLeft', metaKey: true, shiftKey: true } },
+    { cmd: KeyboardCmd.NextTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
+    { cmd: KeyboardCmd.Nothing, match: { code: 'KeyB', metaKey: true, shiftKey: false } },
+  ]
+  setMatchers(tabMatchers)
+  createEffect(() => {
+    console.log('matchers browser', matchers())
   })
 
-  window.addEventListener('keypress', (e: KeyboardEvent) => {
-    // OS specific meta key!
-    const cmd = matchKeyboardEvent(e)
-    if (cmd !== undefined) {
-      e.stopPropagation()
-      e.preventDefault() // stops the "no handler" sound on desktop
-      setKeyboardCmd(cmd)
-    }
-  })
-
-  window.addEventListener(KeyboardCmdEvent, (e: Event) => {
-    const cmd = cmdFromCustomEvent(e as CustomEvent)
-    setKeyboardCmd(cmd)
-  })
-
+  // Child frames notify that tab attributes have changed.
   window.addEventListener(TabUpdateEvent, (e: Event) => {
     const pageMeta = detailFromCustomEvent(e as CustomEvent)
     updateTab(pageMeta.id, pageMeta.k8sCtx, pageMeta.k8sNs, pageMeta.path, pageMeta.title)
@@ -66,7 +59,7 @@ const App: Component = () => {
     })
   }
 
-  createEffect(on(keyboardCmd, (keyboardCmd) => {
+  createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
     switch (keyboardCmd) {
       case KeyboardCmd.NewTab:
         newTab()
@@ -86,25 +79,8 @@ const App: Component = () => {
     }
   }, { defer: true }))
 
-  return (
-    <TabbedBrowser tabs={tabs} selectTab={selectTab} newTab={newTab} closeTab={closeTab} />
-  );
-};
-
-
-interface TabbedBrowserProps {
-  tabs: Store<desktop.Tabs>
-  selectTab: (id: string) => void
-  newTab: () => void
-  closeTab: (id: string) => void
-}
-function TabbedBrowser(props: TabbedBrowserProps) {
-
-  const iframeOnLoad = () => {
-    console.log('iframe onload')
-  }
-
-  let iframeParent: HTMLDivElement | undefined;
+  let iframeParent: HTMLDivElement | undefined
+  let activeIframe: HTMLIFrameElement | undefined
 
   createEffect(() => {
     // Manage lifecycle of iframes.
@@ -113,63 +89,20 @@ function TabbedBrowser(props: TabbedBrowserProps) {
     // It's undefined afaik on whether this function will be called before or after JSX has
     // rendered so handle both.
     if (iframeParent) {
-      const allContainers = iframeParent.querySelectorAll(`.iframeContainer`)
-
-      const containerById: { [key: string]: Element } = {}
-      allContainers.forEach((container) => {
-        const id = container.getAttribute('id')
-        if (id) {
-          containerById[id] = container
-        } else {
-          console.log('unexpected values id, iframe', id, container)
-        }
-      })
-
-      const tabsById: { [key: string]: desktop.Tab } = {}
-      if (props.tabs.All) {
-        props.tabs.All.forEach((t) => tabsById[t.Id] = t)
-      }
-
-      // Changes required
-      const toCreate: Array<desktop.Tab> = _.filter(tabsById, (t) => containerById[t.Id] == undefined)
-      const toDelete: Array<string> = _.filter(Object.keys(containerById), (id) => tabsById[id] == undefined)
-
-      toCreate.forEach(t => {
-        const newIframe = document.createElement('iframe')
-        newIframe.setAttribute('id', t.Id)
-        newIframe.classList.add(styles.content)
-        newIframe.setAttribute('src', pathWithTabId(t.Path, t.Id))
-
-        const newContainer = document.createElement('div')
-        newContainer.setAttribute('id', t.Id)
-        newContainer.classList.add('iframeContainer')
-        if (props.tabs.Current != t.Id) {
-          newContainer.classList.add('is-hidden')
-        }
-        newContainer.appendChild(newIframe)
-        iframeParent.appendChild(newContainer)
-      });
-
-      toDelete.forEach(id => {
-        iframeParent.removeChild(containerById[id])
-      })
-
-      // Only update visibility. Never update iframe#src.
-      // Since only one iframe is visible at a time, order doesn't matter.
-      Object.entries(containerById).forEach(([id, iframe]) => {
-        if (id == props.tabs.Current && iframe.classList.contains('is-hidden')) {
-          iframe.classList.remove('is-hidden')
-        }
-        if (id != props.tabs.Current && !iframe.classList.contains('is-hidden')) {
-          iframe.classList.add('is-hidden')
-        }
-      });
-
+      activeIframe = renderTabIframes(iframeParent, tabs.All, tabs.Current)
     } else {
-      console.log('no iframeParent')
-      // setTimeout? to wait for iframeParent?
+      console.error('no iframeParent. Need setTimeout?')
     }
   })
+
+  const keypressListener = makeKeypressListener((e: CustomEvent) => {
+    activeIframe?.contentWindow?.dispatchEvent(e)
+  })
+  window.addEventListener('keypress', keypressListener)
+  onCleanup(() => window.removeEventListener('keypress', keypressListener))
+
+  window.addEventListener(OtherWindowKeypressEvent, otherWindowListener)
+  onCleanup(() => window.removeEventListener(OtherWindowKeypressEvent, otherWindowListener))
 
   return (
     <div class="columns is-gapless">
@@ -178,14 +111,14 @@ function TabbedBrowser(props: TabbedBrowserProps) {
       <div class="column is-narrow">
         <aside class={`menu ${styles.tabList}`}>
           <ul class="menu-list">
-            <For each={props.tabs.All}>
+            <For each={tabs.All}>
               {(item) =>
                 <li>
                   <a
                     class={styles.tabMenuItem}
-                    classList={{ 'is-active': props.tabs.Current === item.Id }}
+                    classList={{ 'is-active': tabs.Current === item.Id }}
                     onclick={() => {
-                      props.selectTab(item.Id)
+                      selectTab(item.Id)
                     }}>
                     <div>{item.Title}</div>
                     <div>{item.K8sNamespace}</div>
@@ -194,7 +127,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
                       class={styles.tabClose}
                       onclick={(e: Event) => {
                         e.stopPropagation()
-                        props.closeTab(item.Id)
+                        closeTab(item.Id)
                       }}>
                       ✖️
                     </div>
@@ -206,7 +139,7 @@ function TabbedBrowser(props: TabbedBrowserProps) {
             <li>
               <a
                 class={`${styles.newTab} has-text-centered is-size-3`}
-                onClick={props.newTab}>
+                onClick={newTab}>
                 +
               </a>
             </li>
@@ -252,6 +185,60 @@ const pathWithTabId = (path: string, tabId: string): string => {
   }
 
   return modifiedPath
+}
+
+const renderTabIframes = (iframeParent: Element, all: Array<desktop.Tab>, current: string): HTMLIFrameElement | undefined => {
+
+  const allFrames = iframeParent.querySelectorAll(`iframe`)
+
+  const frameById: { [key: string]: HTMLIFrameElement } = {}
+  allFrames.forEach((iframe) => {
+    const id = iframe.getAttribute('id')
+    if (id) {
+      frameById[id] = iframe
+    } else {
+      console.error('unexpected values id, iframe', id, iframe)
+    }
+  })
+
+  const tabsById: { [key: string]: desktop.Tab } = {}
+  if (all) {
+    all.forEach((t) => tabsById[t.Id] = t)
+  }
+
+  // Changes required
+  const toCreate: Array<desktop.Tab> = _.filter(tabsById, (t) => frameById[t.Id] == undefined)
+  const toDelete: Array<string> = _.filter(Object.keys(frameById), (id) => tabsById[id] == undefined)
+
+  toCreate.forEach(t => {
+    const newIframe = document.createElement('iframe')
+    newIframe.setAttribute('id', t.Id)
+    newIframe.classList.add(styles.content)
+    newIframe.setAttribute('src', pathWithTabId(t.Path, t.Id))
+    newIframe.onload = () => console.log('tab frame onload')
+    iframeParent.appendChild(newIframe)
+  });
+
+  toDelete.forEach(id => {
+    iframeParent.removeChild(frameById[id])
+  })
+
+  // Only update visibility. Never update iframe#src.
+  // Since only one iframe is visible at a time, order doesn't matter.
+  let activeIframe: HTMLIFrameElement | undefined
+  Object.entries(frameById).forEach(([id, iframe]) => {
+    if (id == current) {
+      activeIframe = iframe
+      if (iframe.classList.contains('is-hidden')) {
+        iframe.classList.remove('is-hidden')
+      }
+    }
+    if (id != current && !iframe.classList.contains('is-hidden')) {
+      iframe.classList.add('is-hidden')
+    }
+  });
+
+  return activeIframe
 }
 
 

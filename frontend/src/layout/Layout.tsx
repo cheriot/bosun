@@ -4,6 +4,7 @@ import { CtxNsQuery, pathContexts, pathNamespaces, pathResources } from "../mode
 import { createEffect, createResource, Show, on, For } from "solid-js"
 
 import styles from './Layout.module.css'
+import { currentKeyboardCmd, KeyboardCmd, setMatchers } from "../models/keyboardCmd";
 
 const Layout: Component = (props: ParentProps) => {
     const navigate = useNavigate();
@@ -39,6 +40,15 @@ const Layout: Component = (props: ParentProps) => {
         }
         e.preventDefault()
     }
+
+    createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
+        switch (keyboardCmd) {
+            case KeyboardCmd.NewTab:
+                break;
+            default:
+                throw new Error('unknown keyboard cmd ' + keyboardCmd)
+        }
+    }, { defer: true }))
 
     return (
         <>

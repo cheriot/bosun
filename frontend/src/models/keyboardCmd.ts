@@ -1,25 +1,75 @@
+import _ from "lodash"
+import { createSignal } from "solid-js"
 
-const EventName = "keyboardCmd"
+// Event to pass keypresses between windows:
+// 1. parent -> active child
+// 2. child -> parent
+export const OtherWindowKeypressEvent = 'otherWindowKeypressEvent'
 
 enum KeyboardCmd {
-    NewTab = 1,
+    Nothing = 1,
+    NewTab,
     CloseTab,
     PrevTab,
     NextTab,
-    Nothing,
 }
 
-const matchers = [
-    { cmd: KeyboardCmd.NewTab, match: { code: 'KeyT', metaKey: true, shiftKey: false } },
-    { cmd: KeyboardCmd.CloseTab, match: { code: 'KeyW', metaKey: true, shiftKey: false } },
-    { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketLeft', metaKey: true, shiftKey: true } },
-    { cmd: KeyboardCmd.NextTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
-    { cmd: KeyboardCmd.Nothing, match: { code: 'KeyB', metaKey: true, shiftKey: false } },
-]
+export type Key = {
+    code: string
+    metaKey: boolean
+    shiftKey: boolean
+}
 
-const matchKeyboardEvent = (e: KeyboardEvent): KeyboardCmd | undefined => {
-    console.log('match for ', e.code, e.metaKey, e.shiftKey)
-    for (let m of matchers) {
+export type Matcher = {
+    cmd: KeyboardCmd
+    match: Key
+}
+
+const [currentKeyboardCmd, setCurrentKeyboardCmd] = createSignal(KeyboardCmd.Nothing, {
+    equals(prev, next) {
+        // never merge subsequent events
+        // Ex. Cmd+T three times should open three tabs
+        return false
+    },
+})
+
+export const [matchers, setMatchers] = createSignal(new Array<Matcher>())
+
+export const addMachers = (additional: Array<Matcher>) => {
+    setMatchers([...matchers(), ...additional])
+}
+
+type OtherWindowDispatcher = (e: CustomEvent) => void
+type KeyboardListener = (e: KeyboardEvent) => void
+export const makeKeypressListener = (f: OtherWindowDispatcher): KeyboardListener => {
+    return (e: KeyboardEvent) => {
+        e.stopPropagation()
+        e.preventDefault() // stops the "no handler" sound on desktop
+        const keyboardCmd = matchKeyboardEvent(e)
+        if (keyboardCmd) {
+            console.log('keyboardCmd a', e.code, keyboardCmd)
+            setCurrentKeyboardCmd(keyboardCmd)
+        } else {
+            const data = {
+                detail: _.pick(e, 'code', 'metaKey', 'shiftKey')
+            }
+            f(new CustomEvent<Key>(OtherWindowKeypressEvent, data))
+        }
+    }
+}
+
+export const otherWindowListener = (e: Event) => {
+    // Event created in makeKeypressListener so we know what it is.
+    const ce = e as CustomEvent<Key>
+    const keyboardCmd = matchKeyboardEvent(ce.detail)
+    if (keyboardCmd) {
+        console.log('keyboardCmd b', keyboardCmd)
+        setCurrentKeyboardCmd(keyboardCmd)
+    }
+}
+
+const matchKeyboardEvent = (e: Key): KeyboardCmd | undefined => {
+    for (let m of matchers()) {
         if (m.match.code == e.code
             && m.match.metaKey == e.metaKey
             && m.match.shiftKey == e.shiftKey) {
@@ -31,10 +81,4 @@ const matchKeyboardEvent = (e: KeyboardEvent): KeyboardCmd | undefined => {
     return
 }
 
-const createCustomEvent = (keyboardCmd: KeyboardCmd): CustomEvent =>
-    new CustomEvent(EventName, { detail: keyboardCmd });
-
-const cmdFromCustomEvent = (e: CustomEvent): KeyboardCmd =>
-    e.detail
-
-export { KeyboardCmd, matchKeyboardEvent, createCustomEvent, cmdFromCustomEvent, EventName }
+export { KeyboardCmd, currentKeyboardCmd }
