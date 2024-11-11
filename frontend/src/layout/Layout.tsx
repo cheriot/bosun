@@ -17,13 +17,23 @@ const Layout: Component = (props: ParentProps) => {
         if (searchParams.k8sCtx) {
             entries.push({
                 name: searchParams.k8sCtx,
-                path: pathContexts(searchParams)
+                path: pathContexts({ k8sCtx: searchParams.k8sCtx, k8sNs: searchParams.k8sNs })
             })
         }
         if (searchParams.k8sNs) {
             entries.push({
                 name: searchParams.k8sNs,
-                path: pathNamespaces(searchParams)
+                path: pathNamespaces({ k8sCtx: searchParams.k8sCtx, k8sNs: searchParams.k8sNs })
+            })
+        }
+        if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query && searchParams.name) {
+            entries.push({
+                name: searchParams.query,
+                path: pathResources({
+                    k8sCtx: searchParams.k8sCtx,
+                    k8sNs: searchParams.k8sNs,
+                    query: searchParams.query
+                })
             })
         }
 
@@ -31,6 +41,7 @@ const Layout: Component = (props: ParentProps) => {
     }
 
     const onchange = (e: Event) => {
+        // TODO handle cases where k8sCtx or k8sNs are undefined
         if (e.target && e.target instanceof HTMLInputElement && searchParams.k8sCtx) {
             const params = evalCommand(e.target.value)
             if (params.k8sCtx) {

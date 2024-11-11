@@ -4,7 +4,7 @@ import { useSearchParams, useLocation } from "@solidjs/router";
 import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
-import { ResourcesQuery, pathResource } from '../models/navpaths';
+import { ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
 
 import styles from './ResourceList.module.css';
@@ -47,12 +47,13 @@ export const ResourceList: Component = () => {
 
     const resourceCell = (cell: string, idx: number, tableRowNames: Array<string>, group: string, kind: string) => {
         if (idx == 0 && searchParams.k8sCtx && searchParams.k8sNs) {
-            const params = {
+            const params: ResourceQuery = {
                 k8sCtx: searchParams.k8sCtx,
                 k8sNs: searchParams.k8sNs,
                 group: group,
                 kind: kind,
                 name: tableRowNames[idx],
+                query: searchParams.query
             }
             return <a href={pathResource(params)}>{cell}</a>
         }

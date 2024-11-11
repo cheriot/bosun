@@ -16,6 +16,7 @@ export const pathResources = (params: ResourcesQuery) =>
     `/resources${toQueryString(params)}`
 
 export type ResourceQuery = ClusterQuery & {
+    query?: string // parent resource list for nav hierarchy
     group: string
     kind: string
     name: string
