@@ -39,10 +39,12 @@ export const Resource: Component = () => {
     )
     return (
         <div>
-            <pre>{resource().describe}</pre>
-            <br />
-            <br />
-            <pre>{resource().yaml}</pre>
+            <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>
+                <pre>{resource().describe}</pre>
+                <br />
+                <br />
+                <pre>{resource().yaml}</pre>
+            </Show>
         </div>
     )
 }

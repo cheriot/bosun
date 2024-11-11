@@ -1,14 +1,16 @@
 import { type Component, ParentProps, splitProps } from "solid-js";
 import { useSearchParams, useNavigate } from "@solidjs/router";
 import { CtxNsQuery, pathContexts, pathNamespaces, pathResources } from "../models/navpaths";
-import { createEffect, createResource, Show, on, For } from "solid-js"
+import { createEffect, Show, on, For } from "solid-js"
 
 import styles from './Layout.module.css'
 import { currentKeyboardCmd, KeyboardCmd, setMatchers } from "../models/keyboardCmd";
+import { evalCommand } from "../models/command";
+import _ from "lodash";
 
 const Layout: Component = (props: ParentProps) => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     let breadcrumbs = (): Array<{ name: string, path: string }> => {
         const entries = []
@@ -29,17 +31,48 @@ const Layout: Component = (props: ParentProps) => {
     }
 
     const onchange = (e: Event) => {
-        if (e.target && e.target instanceof HTMLInputElement) {
-            // TODO handle missing ctx/ns or hide input
-            const path = pathResources({
-                k8sCtx: searchParams.k8sCtx,
-                k8sNs: searchParams.k8sNs,
-                query: e.target.value
-            })
-            navigate(path)
+        if (e.target && e.target instanceof HTMLInputElement && searchParams.k8sCtx) {
+            const params = evalCommand(e.target.value)
+            if (params.k8sCtx) {
+                if (searchParams.k8sCtx) {
+                    setSearchParams({ k8sCtx: params.k8sCtx })
+                } else {
+                    // nav to ns page
+                    navigate(pathNamespaces(_.assign(params, searchParams)))
+                }
+            } else if (params.k8sNs) {
+                if (searchParams.k8sNs) {
+                    setSearchParams({ k8sNs: params.k8sNs })
+                } else {
+                    // nav to all
+                    navigate(pathResources({
+                        k8sCtx: searchParams.k8sCtx,
+                        k8sNs: params.k8sNs,
+                        query: searchParams.query || 'all'
+                    }))
+                }
+            } else if (params.query) {
+                // nav to query
+                // TODO handle cases where k8sCtx or k8sNs are undefined
+                navigate(pathResources({
+                    k8sCtx: searchParams.k8sCtx,
+                    k8sNs: searchParams.k8sNs,
+                    query: e.target.value
+                }))
+            } else if (params.page) {
+                if (params.page == 'ctx') {
+                    navigate(pathContexts(searchParams))
+                } else if (params.page == 'ns') {
+                    navigate(pathNamespaces(searchParams))
+                } else console.error('unknown page', params)
+            } else {
+                // do nothing
+                console.error('no params from cmd', e.target.value)
+            }
+
             e.target.value = ''
             e.target.blur()
-        }
+        } else console.error('unexpected event')
         e.preventDefault()
     }
 
