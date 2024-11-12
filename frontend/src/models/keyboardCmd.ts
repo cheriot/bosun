@@ -7,12 +7,16 @@ import { createSignal } from "solid-js"
 export const OtherWindowKeypressEvent = 'otherWindowKeypressEvent'
 
 enum KeyboardCmd {
+    // Placeholder
     Nothing = 1,
+    // Tabs
     NewTab,
     CloseTab,
     PrevTab,
     NextTab,
+    // Layout
     FocusCommand,
+    HierarchyUp,
 }
 
 export type Key = {

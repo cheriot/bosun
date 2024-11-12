@@ -89,6 +89,7 @@ const Layout: Component = (props: ParentProps) => {
 
     setMatchers([
         { cmd: KeyboardCmd.FocusCommand, match: { code: 'Semicolon', metaKey: false, shiftKey: true } },
+        { cmd: KeyboardCmd.HierarchyUp, match: { code: 'Escape', metaKey: false, shiftKey: false } },
     ])
 
     let commandInput: HTMLInputElement | undefined
@@ -98,6 +99,13 @@ const Layout: Component = (props: ParentProps) => {
             case KeyboardCmd.FocusCommand:
                 commandInput?.focus()
                 break;
+            case KeyboardCmd.HierarchyUp:
+                const bs = breadcrumbs()
+                if (bs && bs.length > 0) {
+                    const b = bs[bs.length - 1]
+                    navigate(b.path)
+                }
+                break
             default:
                 throw new Error('unknown keyboard cmd ' + keyboardCmd)
         }
