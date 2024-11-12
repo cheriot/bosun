@@ -4,7 +4,7 @@ import { KubeContexts } from '../../wailsjs/go/desktop/FrontendApi';
 import { local } from '../../wailsjs/go/models';
 import { createEffect, createResource, Show, on, For } from "solid-js"
 import { setPageTitle } from '../models/pageMeta';
-import { currentTabId } from "../models/tabState";
+import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 
 export const SelectContext: Component = () => {
     const location = useLocation();
@@ -12,10 +12,11 @@ export const SelectContext: Component = () => {
 
     createEffect(() => {
         setPageTitle('Select Context', location, searchParams)
+        setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().build())
     })
 
     const emptyTabs: Array<local.KubeContext> = []
-    const [kctx, { mutate }] = createResource(() => {
+    const [kctx] = createResource(() => {
         return KubeContexts()
     }, { initialValue: emptyTabs })
 

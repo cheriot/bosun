@@ -7,39 +7,13 @@ import styles from './Layout.module.css'
 import { currentKeyboardCmd, KeyboardCmd, setMatchers } from "../models/keyboardCmd";
 import { evalCommand } from "../models/command";
 import _ from "lodash";
+import { breadcrumbs } from "../models/breadcrumbs";
 
 const Layout: Component = (props: ParentProps) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    let breadcrumbs = (): Array<{ name: string, path: string }> => {
-        const entries = []
-        if (searchParams.k8sCtx) {
-            entries.push({
-                name: searchParams.k8sCtx,
-                path: pathContexts({ k8sCtx: searchParams.k8sCtx, k8sNs: searchParams.k8sNs })
-            })
-        }
-        if (searchParams.k8sNs) {
-            entries.push({
-                name: searchParams.k8sNs,
-                path: pathNamespaces({ k8sCtx: searchParams.k8sCtx, k8sNs: searchParams.k8sNs })
-            })
-        }
-        if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query && searchParams.name) {
-            entries.push({
-                name: searchParams.query,
-                path: pathResources({
-                    k8sCtx: searchParams.k8sCtx,
-                    k8sNs: searchParams.k8sNs,
-                    query: searchParams.query
-                })
-            })
-        }
-
-        return entries
-    }
-
+    // Navigate based on the command entered.
     const onchange = (e: Event) => {
         // TODO handle cases where k8sCtx or k8sNs are undefined
         if (e.target && e.target instanceof HTMLInputElement && searchParams.k8sCtx) {
@@ -87,6 +61,15 @@ const Layout: Component = (props: ParentProps) => {
         e.preventDefault()
     }
 
+    // Excape exits the command bar
+    const onkeypress = (e: KeyboardEvent) => {
+        if (e.code == 'Escape' && e.target instanceof HTMLInputElement) {
+            e.target.blur()
+            // Do not evaluate this keypress as a keyboard command
+            e.stopPropagation()
+        }
+    }
+
     setMatchers([
         { cmd: KeyboardCmd.FocusCommand, match: { code: 'Semicolon', metaKey: false, shiftKey: true } },
         { cmd: KeyboardCmd.HierarchyUp, match: { code: 'Escape', metaKey: false, shiftKey: false } },
@@ -131,6 +114,7 @@ const Layout: Component = (props: ParentProps) => {
                             ref={commandInput}
                             type="text"
                             placeholder="all, pods, services"
+                            onkeypress={onkeypress}
                             onchange={onchange}></input>
                     </div>
                 </div>

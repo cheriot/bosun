@@ -5,6 +5,7 @@ import { ResourceQuery } from '../models/navpaths';
 import { KubeResource } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
 import { setPageTitle } from '../models/pageMeta';
+import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 
 const fetchResource = (source: ResourceQuery): Promise<kube.Resource> => {
     return KubeResource(source.k8sCtx, source.k8sNs, source.group, source.kind, source.name)
@@ -16,6 +17,7 @@ export const Resource: Component = () => {
 
     createEffect(() => {
         setPageTitle(searchParams.name || "", location, searchParams)
+        setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().addK8sNs().addQuery().build())
     })
 
     const resourceQuery = (): ResourceQuery | undefined => {

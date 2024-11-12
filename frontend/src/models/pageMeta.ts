@@ -20,7 +20,6 @@ const setPageTitle = (title: string, location: Location, searchParams: CtxNsQuer
             path: location.pathname + location.search,
             title: title,
         }
-        console.log('dispatch event', pageMeta)
         window.top.dispatchEvent(createCustomEvent(pageMeta))
     } else {
         console.error('setting state without tabId', window.tabId, !!window.top)

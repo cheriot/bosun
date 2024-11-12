@@ -3,6 +3,8 @@ import { KubeNamespaces } from '../../wailsjs/go/desktop/FrontendApi';
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { createEffect, createResource, For } from "solid-js"
 import { setPageTitle } from '../models/pageMeta';
+import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
+import _ from 'lodash';
 
 export const SelectNamespace: Component = () => {
     const location = useLocation();
@@ -10,7 +12,8 @@ export const SelectNamespace: Component = () => {
     const k8sCtx = () => searchParams.k8sCtx
 
     createEffect(() => {
-        setPageTitle('Select Context', location, searchParams)
+        setPageTitle('Select Namespace', location, searchParams)
+        setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().build())
     })
 
     const [namespaces] = createResource(() => {

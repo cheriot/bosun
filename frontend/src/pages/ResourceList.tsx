@@ -8,6 +8,7 @@ import { ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths'
 import { setPageTitle } from '../models/pageMeta';
 
 import styles from './ResourceList.module.css';
+import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 
 const fetchResources = (source: ResourcesQuery) => {
     return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
@@ -20,6 +21,7 @@ export const ResourceList: Component = () => {
 
     createEffect(() => {
         setPageTitle(searchParams.query || "", location, searchParams)
+        setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().addK8sNs().build())
     })
 
     const resourceQuery = (): ResourcesQuery | undefined => {
