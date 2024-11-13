@@ -89,8 +89,6 @@ const Layout: Component = (props: ParentProps) => {
                     navigate(b.path)
                 }
                 break
-            default:
-                throw new Error('unknown keyboard cmd ' + keyboardCmd)
         }
     }, { defer: true }))
 

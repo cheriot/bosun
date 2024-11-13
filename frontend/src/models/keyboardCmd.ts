@@ -17,6 +17,10 @@ enum KeyboardCmd {
     // Layout
     FocusCommand,
     HierarchyUp,
+    // Within page
+    Down,
+    Up,
+    Select,
 }
 
 export type Key = {

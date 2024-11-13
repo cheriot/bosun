@@ -18,18 +18,6 @@ import { KeyboardCmd, matchers, Matcher, setMatchers, OtherWindowKeypressEvent, 
  */
 const App: Component = () => {
 
-  const tabMatchers: Array<Matcher> = [
-    { cmd: KeyboardCmd.NewTab, match: { code: 'KeyT', metaKey: true, shiftKey: false } },
-    { cmd: KeyboardCmd.CloseTab, match: { code: 'KeyW', metaKey: true, shiftKey: false } },
-    { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketLeft', metaKey: true, shiftKey: true } },
-    { cmd: KeyboardCmd.NextTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
-    { cmd: KeyboardCmd.Nothing, match: { code: 'KeyB', metaKey: true, shiftKey: false } },
-  ]
-  setMatchers(tabMatchers)
-  createEffect(() => {
-    console.log('matchers browser', matchers())
-  })
-
   // Child frames notify that tab attributes have changed.
   window.addEventListener(TabUpdateEvent, (e: Event) => {
     const pageMeta = detailFromCustomEvent(e as CustomEvent)
@@ -58,6 +46,15 @@ const App: Component = () => {
       setTabs(tabs)
     })
   }
+
+
+  setMatchers([
+    { cmd: KeyboardCmd.NewTab, match: { code: 'KeyT', metaKey: true, shiftKey: false } },
+    { cmd: KeyboardCmd.CloseTab, match: { code: 'KeyW', metaKey: true, shiftKey: false } },
+    { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketLeft', metaKey: true, shiftKey: true } },
+    { cmd: KeyboardCmd.NextTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
+    { cmd: KeyboardCmd.Nothing, match: { code: 'KeyB', metaKey: true, shiftKey: false } },
+  ])
 
   createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
     switch (keyboardCmd) {
