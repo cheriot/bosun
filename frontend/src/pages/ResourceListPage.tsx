@@ -1,20 +1,19 @@
 
-import { type Component } from 'solid-js';
+import { type Component, createEffect, createResource, Show, on, For } from "solid-js"
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
-import { createEffect, createResource, Show, on, For } from "solid-js"
-import { ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths';
+import { ClusterQuery, ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
 
-import styles from './ResourceList.module.css';
+import styles from './ResourceListPage.module.css';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 
 const fetchResources = (source: ResourcesQuery) => {
     return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
 }
 
-export const ResourceList: Component = () => {
+export const ResourceListPage: Component = () => {
 
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -24,15 +23,27 @@ export const ResourceList: Component = () => {
         setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().addK8sNs().build())
     })
 
-    const resourceQuery = (): ResourcesQuery | undefined => {
-        if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query) {
-            return {
-                k8sCtx: searchParams.k8sCtx,
-                k8sNs: searchParams.k8sNs,
-                query: searchParams.query
-            }
+    if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query) {
+        return <ResourceList
+            k8sCtx={searchParams.k8sCtx}
+            k8sNs={searchParams.k8sNs}
+            query={searchParams.query} />
+    }
+
+    console.error('insufficient props for ResourceListPage', searchParams)
+    return <div>Something broke. There's not enough information to build the page.</div>
+}
+
+type ResourceListProps = ResourcesQuery & {
+}
+
+export const ResourceList: Component<ResourceListProps> = (props) => {
+    const resourceQuery = (): ResourcesQuery => {
+        return {
+            k8sCtx: props.k8sCtx,
+            k8sNs: props.k8sNs,
+            query: props.query
         }
-        return
     }
     const [tables] = createResource(
         resourceQuery,
@@ -48,14 +59,14 @@ export const ResourceList: Component = () => {
     }
 
     const resourceCell = (cell: string, idx: number, tableRowNames: Array<string>, group: string, kind: string) => {
-        if (idx == 0 && searchParams.k8sCtx && searchParams.k8sNs) {
+        if (idx == 0 && props.k8sCtx && props.k8sNs) {
             const params: ResourceQuery = {
-                k8sCtx: searchParams.k8sCtx,
-                k8sNs: searchParams.k8sNs,
+                k8sCtx: props.k8sCtx,
+                k8sNs: props.k8sNs,
                 group: group,
                 kind: kind,
                 name: tableRowNames[idx],
-                query: searchParams.query
+                query: props.query
             }
             return <a href={pathResource(params)}>{cell}</a>
         }
@@ -64,7 +75,7 @@ export const ResourceList: Component = () => {
 
     return (
         <div>
-            <p class="is-size-3 has-text-weight-semibold mb-4">{searchParams.query}</p>
+            <p class="is-size-3 has-text-weight-semibold mb-4">{props.query}</p>
             <For each={tables()}>
                 {(table) =>
                     <Show when={table.table?.rows.length && table.table.rows.length > 0}>

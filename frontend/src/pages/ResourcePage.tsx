@@ -11,7 +11,7 @@ const fetchResource = (source: ResourceQuery): Promise<kube.Resource> => {
     return KubeResource(source.k8sCtx, source.k8sNs, source.group, source.kind, source.name)
 }
 
-export const Resource: Component = () => {
+export const ResourcePage: Component = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
 

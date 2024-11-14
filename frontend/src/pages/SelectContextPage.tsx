@@ -7,7 +7,7 @@ import { setPageTitle } from '../models/pageMeta';
 import { setBreadcrumbs } from '../models/breadcrumbs';
 import { SelectableList } from '../components/SelectableList';
 
-export const SelectContext: Component = () => {
+export const SelectContextPage: Component = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
 

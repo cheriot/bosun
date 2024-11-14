@@ -7,7 +7,7 @@ import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 import _ from 'lodash';
 import { SelectableList } from '../components/SelectableList';
 
-export const SelectNamespace: Component = () => {
+export const SelectNamespacePage: Component = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
 

@@ -5,11 +5,11 @@ import { render } from 'solid-js/web';
 import { Router, Route } from "@solidjs/router";
 import { OtherWindowKeypressEvent, makeKeypressListener, otherWindowListener } from './models/keyboardCmd';
 import { Layout } from './layout/Layout'
-import { SelectContext } from './pages/SelectContext';
-import { SelectNamespace } from './pages/SelectNamespace';
-import { ResourceList } from './pages/ResourceList';
-import { Resource } from './pages/Resource';
-import { NotFound } from './pages/NotFound';
+import { SelectContextPage } from './pages/SelectContextPage';
+import { SelectNamespacePage } from './pages/SelectNamespacePage';
+import { ResourceListPage } from './pages/ResourceListPage';
+import { ResourcePage } from './pages/ResourcePage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 /**
  * The outer element of a single page app.
@@ -33,11 +33,11 @@ const TabContent: Component = () => {
 
   return (
     <Router root={Layout}>
-      <Route path="/" component={SelectContext} />
-      <Route path="/namespaces" component={SelectNamespace} />
-      <Route path="/resources" component={ResourceList} />
-      <Route path="/resource" component={Resource} />
-      <Route path="*404" component={NotFound} />
+      <Route path="/" component={SelectContextPage} />
+      <Route path="/namespaces" component={SelectNamespacePage} />
+      <Route path="/resources" component={ResourceListPage} />
+      <Route path="/resource" component={ResourcePage} />
+      <Route path="*404" component={NotFoundPage} />
     </Router>
   )
 }

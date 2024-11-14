@@ -4,7 +4,7 @@ import { setPageTitle } from '../models/pageMeta';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 
 
-export const NotFound: Component = () => {
+export const NotFoundPage: Component = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     createEffect(() => {

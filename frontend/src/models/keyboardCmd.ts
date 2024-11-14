@@ -1,5 +1,4 @@
 import _ from "lodash"
-import { createSignal } from "solid-js"
 
 // Event to pass keypresses between windows:
 // 1. parent -> active child
