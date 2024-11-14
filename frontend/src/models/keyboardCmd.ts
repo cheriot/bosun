@@ -6,7 +6,7 @@ import { createSignal } from "solid-js"
 // 2. child -> parent
 export const OtherWindowKeypressEvent = 'otherWindowKeypressEvent'
 
-enum KeyboardCmd {
+export enum KeyboardCmd {
     // Placeholder
     Nothing = 1,
     // Tabs
@@ -34,18 +34,17 @@ export type Matcher = {
     match: Key
 }
 
-const [currentKeyboardCmd, setCurrentKeyboardCmd] = createSignal(KeyboardCmd.Nothing, {
-    equals(prev, next) {
-        // never merge subsequent events
-        // Ex. Cmd+T three times should open three tabs
-        return false
-    },
-})
+type CmdListeners = { matchers: Matcher[], listener: (cmd: KeyboardCmd) => void }
+const keyboardCmdListeners: { [key: string]: CmdListeners } = {}
 
-export const [matchers, setMatchers] = createSignal(new Array<Matcher>())
+export const addKeyboardCmdListener = (matchers: Matcher[], listener: (cmd: KeyboardCmd) => void): string => {
+    const id = window.crypto.randomUUID()
+    keyboardCmdListeners[id] = { matchers, listener }
+    return id
+}
 
-export const addMachers = (additional: Array<Matcher>) => {
-    setMatchers([...matchers(), ...additional])
+export const removeKeyboardCmdListener = (id: string): boolean => {
+    return delete keyboardCmdListeners[id]
 }
 
 type OtherWindowDispatcher = (e: CustomEvent) => void
@@ -54,17 +53,19 @@ export const makeKeypressListener = (f: OtherWindowDispatcher): KeyboardListener
 
     return (e: KeyboardEvent) => {
         const isInputElement = (e.target as HTMLElement)?.tagName == "INPUT"
-        const keyboardCmd = matchKeyboardEvent(e)
-        if (keyboardCmd || !isInputElement) {
-            // stops the "no handler" sound on desktop
-            // stops the keyboard command : from being typed into the focused input
-            // do not call this for input elements because it prevents entering text
+        const triggered = triggerListeners(e)
+        // const keyboardCmd = matchKeyboardEvent(e)
+        if (triggered || !isInputElement) {
+            // Stops the keyboard command : from being typed into the focused input.
+            // Stops the "no handler" sound on desktop.
+            // Do not call this for events originating from an input because it will
+            // prevent typing.
             e.preventDefault()
         }
 
-        if (keyboardCmd) {
-            console.log('keyboardCmd a', e.code, keyboardCmd)
-            setCurrentKeyboardCmd(keyboardCmd)
+        if (triggered) {
+            console.log('keyboardCmd a', e.code)
+            // setCurrentKeyboardCmd(keyboardCmd)
         } else {
             const data = {
                 detail: _.pick(e, 'code', 'metaKey', 'shiftKey')
@@ -77,23 +78,27 @@ export const makeKeypressListener = (f: OtherWindowDispatcher): KeyboardListener
 export const otherWindowListener = (e: Event) => {
     // Event created in makeKeypressListener so we know what it is.
     const ce = e as CustomEvent<Key>
-    const keyboardCmd = matchKeyboardEvent(ce.detail)
-    if (keyboardCmd) {
-        console.log('keyboardCmd b', keyboardCmd)
-        setCurrentKeyboardCmd(keyboardCmd)
+    // const keyboardCmd = matchKeyboardEvent(ce.detail)
+    const triggered = triggerListeners(ce.detail)
+    if (triggered) {
+        console.log('keyboardCmd b', ce.detail)
+        // setCurrentKeyboardCmd(keyboardCmd)
     }
 }
 
-const matchKeyboardEvent = (e: Key): KeyboardCmd | undefined => {
-    for (let m of matchers()) {
-        if (m.match.code == e.code
-            && m.match.metaKey == e.metaKey
-            && m.match.shiftKey == e.shiftKey) {
-
-            return m.cmd
+const triggerListeners = (e: Key): boolean => {
+    let triggered = false
+    _.values(keyboardCmdListeners).forEach(({ matchers, listener }) => {
+        const matches = _.filter(matchers, (m) => {
+            return m.match.code == e.code
+                && m.match.metaKey == e.metaKey
+                && m.match.shiftKey == e.shiftKey
+        })
+        if (matches.length > 0) {
+            if (matches.length > 1) console.error('too many matches for cmd', matches)
+            listener(matches[0].cmd)
+            triggered = true
         }
-    }
-    return
+    })
+    return triggered
 }
-
-export { KeyboardCmd, currentKeyboardCmd }

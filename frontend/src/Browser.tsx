@@ -9,7 +9,7 @@ import styles from './Browser.module.css';
 import { tabs as desktop } from '../wailsjs/go/models';
 import { Tabs, SelectTab, CloseTab, NewTab, PrevTab, NextTab, UpdateTab } from '../wailsjs/go/desktop/FrontendApi';
 import { detailFromCustomEvent, EventName as TabUpdateEvent } from './models/pageMeta';
-import { KeyboardCmd, matchers, Matcher, setMatchers, OtherWindowKeypressEvent, makeKeypressListener, otherWindowListener, currentKeyboardCmd } from './models/keyboardCmd';
+import { KeyboardCmd, OtherWindowKeypressEvent, makeKeypressListener, otherWindowListener, addKeyboardCmdListener, removeKeyboardCmdListener } from './models/keyboardCmd';
 
 /**
  * Outer element of a single page app.
@@ -48,15 +48,14 @@ const App: Component = () => {
   }
 
 
-  setMatchers([
+  const matchers = [
     { cmd: KeyboardCmd.NewTab, match: { code: 'KeyT', metaKey: true, shiftKey: false } },
     { cmd: KeyboardCmd.CloseTab, match: { code: 'KeyW', metaKey: true, shiftKey: false } },
     { cmd: KeyboardCmd.PrevTab, match: { code: 'BracketLeft', metaKey: true, shiftKey: true } },
     { cmd: KeyboardCmd.NextTab, match: { code: 'BracketRight', metaKey: true, shiftKey: true } },
     { cmd: KeyboardCmd.Nothing, match: { code: 'KeyB', metaKey: true, shiftKey: false } },
-  ])
-
-  createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
+  ]
+  const listenerId = addKeyboardCmdListener(matchers, (keyboardCmd) => {
     switch (keyboardCmd) {
       case KeyboardCmd.NewTab:
         newTab()
@@ -74,7 +73,8 @@ const App: Component = () => {
         console.log('unknown cmd', keyboardCmd)
         throw new Error('unknown keyboard cmd')
     }
-  }, { defer: true }))
+  })
+  onCleanup(() => removeKeyboardCmdListener(listenerId))
 
   let iframeParent: HTMLDivElement | undefined
   let activeIframe: HTMLIFrameElement | undefined

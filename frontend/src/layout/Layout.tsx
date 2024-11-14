@@ -4,7 +4,7 @@ import { CtxNsQuery, pathContexts, pathNamespaces, pathResources } from "../mode
 import { createEffect, Show, on, For } from "solid-js"
 
 import styles from './Layout.module.css'
-import { currentKeyboardCmd, KeyboardCmd, setMatchers } from "../models/keyboardCmd";
+import { KeyboardCmd, addKeyboardCmdListener, removeKeyboardCmdListener } from "../models/keyboardCmd";
 import { evalCommand } from "../models/command";
 import _ from "lodash";
 import { breadcrumbs } from "../models/breadcrumbs";
@@ -70,14 +70,13 @@ const Layout: Component = (props: ParentProps) => {
         }
     }
 
-    setMatchers([
-        { cmd: KeyboardCmd.FocusCommand, match: { code: 'Semicolon', metaKey: false, shiftKey: true } },
-        { cmd: KeyboardCmd.HierarchyUp, match: { code: 'Escape', metaKey: false, shiftKey: false } },
-    ])
-
     let commandInput: HTMLInputElement | undefined
 
-    createEffect(on(currentKeyboardCmd, (keyboardCmd) => {
+    const matchers = [
+        { cmd: KeyboardCmd.FocusCommand, match: { code: 'Semicolon', metaKey: false, shiftKey: true } },
+        { cmd: KeyboardCmd.HierarchyUp, match: { code: 'Escape', metaKey: false, shiftKey: false } },
+    ]
+    const listenerId = addKeyboardCmdListener(matchers, (keyboardCmd) => {
         switch (keyboardCmd) {
             case KeyboardCmd.FocusCommand:
                 commandInput?.focus()
@@ -90,7 +89,7 @@ const Layout: Component = (props: ParentProps) => {
                 }
                 break
         }
-    }, { defer: true }))
+    })
 
     return (
         <>
