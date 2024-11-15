@@ -2,14 +2,9 @@ import type { Component } from "solid-js";
 import { createEffect, createResource, Show, on, For } from "solid-js"
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { ResourceQuery } from '../models/navpaths';
-import { KubeResource } from '../../wailsjs/go/desktop/FrontendApi';
-import { kube } from '../../wailsjs/go/models';
 import { setPageTitle } from '../models/pageMeta';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
-
-const fetchResource = (source: ResourceQuery): Promise<kube.Resource> => {
-    return KubeResource(source.k8sCtx, source.k8sNs, source.group, source.kind, source.name)
-}
+import { fetchK8sResource } from "../models/resourceData";
 
 export const ResourcePage: Component = () => {
     const location = useLocation();
@@ -34,11 +29,8 @@ export const ResourcePage: Component = () => {
         return
     }
 
-    const [resource] = createResource(
-        resourceQuery,
-        fetchResource,
-        { initialValue: kube.Resource.createFrom({}) },
-    )
+    const resource = fetchK8sResource(resourceQuery)
+
     return (
         <div>
             <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>

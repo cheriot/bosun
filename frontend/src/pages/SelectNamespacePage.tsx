@@ -6,6 +6,7 @@ import { setPageTitle } from '../models/pageMeta';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 import _ from 'lodash';
 import { SelectableList } from '../components/SelectableList';
+import { pathContexts, pathNamespace } from '../models/navpaths';
 
 export const SelectNamespacePage: Component = () => {
     const location = useLocation();
@@ -16,7 +17,14 @@ export const SelectNamespacePage: Component = () => {
         setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().build())
     })
 
-    const resourcesPath = (ns: string) => `/resources?k8sCtx=${searchParams.k8sCtx}&k8sNs=${ns}&query=all`
+    // const resourcesPath = (ns: string) => `/resources?k8sCtx=${searchParams.k8sCtx}&k8sNs=${ns}&query=all`
+    const namespacePath = (ns: string): string => {
+        if (searchParams.k8sCtx) {
+            return pathNamespace({ k8sCtx: searchParams.k8sCtx, k8sNs: ns })
+        }
+        console.error('unable to render namespace path without k8sCtx', searchParams)
+        return pathContexts({})
+    }
 
     const initState = () => {
         if (searchParams.k8sCtx) {
@@ -34,7 +42,7 @@ export const SelectNamespacePage: Component = () => {
     return (
         <div>
             <p>namespaces from {searchParams.k8sCtx}</p>
-            <SelectableList initState={initState} selectPath={resourcesPath}></SelectableList>
+            <SelectableList initState={initState} selectPath={namespacePath}></SelectableList>
         </div>
     )
 }

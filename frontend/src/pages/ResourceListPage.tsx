@@ -3,7 +3,7 @@ import { type Component, createEffect, createResource, Show, on, For } from "sol
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
 import { kube } from '../../wailsjs/go/models';
-import { ClusterQuery, ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths';
+import { ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
 
 import styles from './ResourceListPage.module.css';
@@ -24,18 +24,22 @@ export const ResourceListPage: Component = () => {
     })
 
     if (searchParams.k8sCtx && searchParams.k8sNs && searchParams.query) {
-        return <ResourceList
-            k8sCtx={searchParams.k8sCtx}
-            k8sNs={searchParams.k8sNs}
-            query={searchParams.query} />
+        return (
+            <div>
+                <p class="is-size-3 has-text-weight-semibold mb-4">{searchParams.query}</p>
+                <ResourceList
+                    k8sCtx={searchParams.k8sCtx}
+                    k8sNs={searchParams.k8sNs}
+                    query={searchParams.query} />
+            </div>
+        )
     }
 
     console.error('insufficient props for ResourceListPage', searchParams)
     return <div>Something broke. There's not enough information to build the page.</div>
 }
 
-type ResourceListProps = ResourcesQuery & {
-}
+type ResourceListProps = ResourcesQuery
 
 export const ResourceList: Component<ResourceListProps> = (props) => {
     const resourceQuery = (): ResourcesQuery => {
@@ -75,7 +79,6 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
 
     return (
         <div>
-            <p class="is-size-3 has-text-weight-semibold mb-4">{props.query}</p>
             <For each={tables()}>
                 {(table) =>
                     <Show when={table.table?.rows.length && table.table.rows.length > 0}>

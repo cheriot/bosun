@@ -7,6 +7,7 @@ import { OtherWindowKeypressEvent, makeKeypressListener, otherWindowListener } f
 import { Layout } from './layout/Layout'
 import { SelectContextPage } from './pages/SelectContextPage';
 import { SelectNamespacePage } from './pages/SelectNamespacePage';
+import { NamespacePage } from './pages/NamespacePage';
 import { ResourceListPage } from './pages/ResourceListPage';
 import { ResourcePage } from './pages/ResourcePage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -35,6 +36,7 @@ const TabContent: Component = () => {
     <Router root={Layout}>
       <Route path="/" component={SelectContextPage} />
       <Route path="/namespaces" component={SelectNamespacePage} />
+      <Route path="/namespace" component={NamespacePage} />
       <Route path="/resources" component={ResourceListPage} />
       <Route path="/resource" component={ResourcePage} />
       <Route path="*404" component={NotFoundPage} />
