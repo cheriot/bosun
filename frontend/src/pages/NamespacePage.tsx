@@ -10,7 +10,6 @@ export const NamespacePage: Component = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
 
-    console.log('keys', Object.keys(searchParams), searchParams)
     createEffect(() => {
         setPageTitle(searchParams.query || "", location, searchParams)
         setBreadcrumbs(new BreadcrumbBuilder(searchParams).addK8xCtx().build())

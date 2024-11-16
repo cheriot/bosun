@@ -1,5 +1,5 @@
-import { type Component, ParentProps, splitProps } from "solid-js";
-import { useSearchParams, useNavigate } from "@solidjs/router";
+import { type Component, onCleanup, ParentProps, splitProps } from "solid-js";
+import { useSearchParams, useNavigate, useLocation } from "@solidjs/router";
 import { CtxNsQuery, pathContexts, pathNamespaces, pathResources } from "../models/navpaths";
 import { createEffect, Show, on, For } from "solid-js"
 
@@ -9,7 +9,7 @@ import { evalCommand } from "../models/command";
 import _ from "lodash";
 import { breadcrumbs } from "../models/breadcrumbs";
 
-const Layout: Component = (props: ParentProps) => {
+export const Layout: Component = (props: ParentProps) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -90,11 +90,30 @@ const Layout: Component = (props: ParentProps) => {
                 break
         }
     })
+    onCleanup(() => removeKeyboardCmdListener(listenerId))
 
     return (
         <>
             <div class={`section pb-5 ${styles.navSection}`}>
                 <div class="columns is-vcentered">
+                    <div class='column is-narrow'>
+                        <div class="field has-addons">
+                            <p class="control">
+                                <button
+                                    class={`button ${styles.backfwd}`}
+                                    onclick={() => history.back()}>
+                                    &#9664;
+                                </button>
+                            </p>
+                            <p class="control">
+                                <button
+                                    class={`button ${styles.backfwd}`}
+                                    onclick={() => history.forward()}>
+                                    &#9654;
+                                </button>
+                            </p>
+                        </div>
+                    </div>
                     <div class='column is-narrow'>
                         <nav class="breadcrumb" aria-label="breadcrumbs">
                             <ul>
@@ -120,5 +139,3 @@ const Layout: Component = (props: ParentProps) => {
         </>
     )
 }
-
-export { Layout }
