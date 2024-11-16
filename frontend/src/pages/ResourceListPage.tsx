@@ -1,17 +1,12 @@
 
-import { type Component, createEffect, createResource, Show, on, For } from "solid-js"
+import { type Component, createEffect, createResource, Show, on, For, Accessor } from "solid-js"
 import { useSearchParams, useLocation } from "@solidjs/router";
-import { KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
-import { kube } from '../../wailsjs/go/models';
 import { ResourceQuery, ResourcesQuery, pathResource } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
 
 import styles from './ResourceListPage.module.css';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
-
-const fetchResources = (source: ResourcesQuery) => {
-    return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
-}
+import { fetchK8sResourceTable, type TableCell } from "../models/resourceData";
 
 export const ResourceListPage: Component = () => {
 
@@ -49,56 +44,57 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
             query: props.query
         }
     }
-    const [tables] = createResource(
-        resourceQuery,
-        fetchResources,
-        { initialValue: [] },
-    )
 
-    const formatApiResource = (apiResource: { group?: string, version?: string }): string => {
-        if (!apiResource.group) {
-            return apiResource.version || ""
+    const renderTables = fetchK8sResourceTable(resourceQuery)
+
+    const formatApiResource = (group?: string, version?: string): string => {
+        if (!group) {
+            return version || ""
         }
-        return `${apiResource.group}/${apiResource.version}`
+        return `${group}/${version}`
     }
 
-    const resourceCell = (cell: string, idx: number, tableRowNames: Array<string>, group: string, kind: string) => {
-        if (idx == 0 && props.k8sCtx && props.k8sNs) {
+    const resourceCell = (cell: TableCell, group: string, kind: string) => {
+        if (cell.isName) {
             const params: ResourceQuery = {
                 k8sCtx: props.k8sCtx,
                 k8sNs: props.k8sNs,
                 group: group,
                 kind: kind,
-                name: tableRowNames[idx],
+                name: cell.value,
                 query: props.query
             }
-            return <a href={pathResource(params)}>{cell}</a>
+            return <a href={pathResource(params)}>{cell.value}</a>
         }
-        return cell
+        return cell.value
     }
 
     return (
         <div>
-            <For each={tables()}>
-                {(table) =>
-                    <Show when={table.table?.rows.length && table.table.rows.length > 0}>
-                        <p class="is-size-5">{table.apiResource.name} <span>{formatApiResource(table.apiResource)}</span></p>
+            <For each={renderTables()}>
+                {(rt) =>
+                    <Show when={rt.rows.length > 0}>
+                        <Show when={renderTables().length > 1}>
+                            <p class="is-size-5 is-lowercase">{rt.kind} <span>{formatApiResource(rt.group, rt.version)}</span></p>
+                        </Show>
                         <table class="table is-striped">
-                            <thead><tr>
-                                <For each={table.table?.columnDefinitions}>
-                                    {(def) =>
-                                        <th class={styles.columnHeader}>{def.name}</th>
-                                    }
-                                </For>
-                            </tr></thead>
+                            <thead>
+                                <tr>
+                                    <For each={rt.headers}>
+                                        {(h) =>
+                                            <th class={styles.columnHeader}>{h.value}</th>
+                                        }
+                                    </For>
+                                </tr>
+                            </thead>
                             <tbody>
-                                <For each={table.table?.rows}>
+                                <For each={rt.rows}>
                                     {(row) =>
                                         <tr>
                                             <For each={row.cells}>
                                                 {(cell, i) =>
                                                     <td>
-                                                        {resourceCell(cell, i(), table.tableRowNames, table.apiResource.group || "", table.apiResource.kind)}
+                                                        {resourceCell(cell, rt.group || "", rt.kind)}
                                                     </td>
                                                 }
                                             </For>

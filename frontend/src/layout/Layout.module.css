@@ -11,5 +11,6 @@
 }
 
 .backfwd {
-    color: darkslategray;
+    /* bulma body color to match text */
+    color: rgb(64, 70, 84);
 }
