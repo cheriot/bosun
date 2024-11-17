@@ -82,7 +82,7 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
                 k8sNs: props.k8sNs,
                 group: group,
                 kind: kind,
-                name: cell.value,
+                name: cell.value.toString(),
                 query: props.query
             }
             return <a href={pathResource(params)}>{cell.value}</a>
@@ -115,7 +115,6 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
                                     {(row) =>
                                         <Show when={row.isVisible}>
                                             <tr>
-                                                <td>{`${row.isVisible}`}</td>
                                                 <For each={row.cells}>
                                                     {(cell, i) =>
                                                         <td>

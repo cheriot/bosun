@@ -128,6 +128,7 @@ export const Layout: Component = (props: ParentProps) => {
                         <input class={`input ${styles.queryInput}`}
                             ref={commandInput}
                             autocomplete="off"
+                            autocorrect="off"
                             type="text"
                             placeholder="all, pods, services"
                             onkeypress={onkeypress}

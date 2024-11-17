@@ -54,6 +54,7 @@ export const FindFilter: Component<FindFilterProps> = (props) => {
             <input class={`input`}
                 ref={filteringInputEl}
                 autocomplete="off"
+                autocorrect="off"
                 type="text"
                 placeholder="filter"
                 onkeyup={onkeyup}
