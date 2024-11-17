@@ -20,6 +20,7 @@ export enum KeyboardCmd {
     Down,
     Up,
     Select,
+    FilterFind,
 }
 
 export type Key = {
@@ -77,11 +78,9 @@ export const makeKeypressListener = (f: OtherWindowDispatcher): KeyboardListener
 export const otherWindowListener = (e: Event) => {
     // Event created in makeKeypressListener so we know what it is.
     const ce = e as CustomEvent<Key>
-    // const keyboardCmd = matchKeyboardEvent(ce.detail)
     const triggered = triggerListeners(ce.detail)
     if (triggered) {
         console.log('keyboardCmd b', ce.detail)
-        // setCurrentKeyboardCmd(keyboardCmd)
     }
 }
 

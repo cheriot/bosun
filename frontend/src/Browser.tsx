@@ -235,6 +235,7 @@ const renderTabIframes = (iframeParent: Element, all: Array<desktop.Tab>, curren
     }
   });
 
+  console.log('activeIframe set to', activeIframe?.getAttribute('id'))
   return activeIframe
 }
 
