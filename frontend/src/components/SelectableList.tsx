@@ -3,6 +3,7 @@ import { createStore } from "solid-js/store";
 import { useNavigate } from "@solidjs/router";
 import { createEffect, Show, on, For } from "solid-js"
 import { KeyboardCmd, addKeyboardCmdListener, removeKeyboardCmdListener } from '../models/keyboardCmd';
+import { FindFilter } from './FindFilter';
 
 type SelectableListProps = {
     initState: () => Promise<{ idx: number, list: string[] }>
@@ -37,7 +38,6 @@ export const SelectableList: Component<SelectableListProps> = (props: Selectable
         { cmd: KeyboardCmd.Down, match: { code: 'KeyJ', metaKey: false, shiftKey: false } },
         { cmd: KeyboardCmd.Up, match: { code: 'KeyK', metaKey: false, shiftKey: false } },
         { cmd: KeyboardCmd.Select, match: { code: 'Enter', metaKey: false, shiftKey: false } },
-        { cmd: KeyboardCmd.FilterFind, match: { code: 'Slash', metaKey: false, shiftKey: false } },
     ]
     const listenerId = addKeyboardCmdListener(matchers, (keyboardCmd) => {
         switch (keyboardCmd) {
@@ -52,55 +52,13 @@ export const SelectableList: Component<SelectableListProps> = (props: Selectable
             case KeyboardCmd.Select:
                 navigate(props.selectPath(store.list[store.highlightedIdx]))
                 break;
-            case KeyboardCmd.FilterFind:
-                setIsFiltering(!isFiltering())
-                if (isFiltering()) {
-                    filteringInputEl?.focus()
-                }
-                break;
         }
     })
     onCleanup(() => removeKeyboardCmdListener(listenerId))
 
-    // List Filtering
-    let filteringInputEl: HTMLInputElement | undefined
-    const [isFiltering, setIsFiltering] = createSignal(false)
-    const onkeyup = (e: KeyboardEvent) => {
-        // backspace doesn't trigger onkeypress
-        switch (e.code) {
-            case 'Enter':
-                filteringInputEl?.blur()
-                break;
-            case 'Escape':
-                setIsFiltering(false)
-                resetList()
-                if (filteringInputEl) filteringInputEl.value = ''
-                break;
-            default:
-                if (filteringInputEl) filterList(filteringInputEl.value)
-        }
-    }
-    const onkeypress = (e: KeyboardEvent) => {
-        // need to stopPropagation so they're not interpreted as keyboard commands
-        e.stopPropagation()
-    }
-    const onchange = (e: Event) => {
-        e.preventDefault()
-    }
-
     return <div class="menu">
         <ul class="menu-list">
-            <Show when={isFiltering()}>
-                <input class={`input`}
-                    ref={filteringInputEl}
-                    type="text"
-                    placeholder="filter"
-                    onkeyup={onkeyup}
-                    onkeypress={onkeypress}
-                    onchange={onchange}>
-
-                </input>
-            </Show>
+            <FindFilter applyFilter={filterList} removeFilter={resetList} />
 
             <For each={store.list}>
                 {(c, i) => <li><a classList={{ 'is-active': i() == store.highlightedIdx }} href={props.selectPath(c)}>{c}</a></li>}
