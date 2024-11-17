@@ -69,7 +69,6 @@ export const Layout: Component = (props: ParentProps) => {
             e.stopPropagation()
         }
     }
-
     let commandInput: HTMLInputElement | undefined
 
     const matchers = [
@@ -128,10 +127,11 @@ export const Layout: Component = (props: ParentProps) => {
                     <div class='column'>
                         <input class={`input ${styles.queryInput}`}
                             ref={commandInput}
+                            autocomplete="off"
                             type="text"
                             placeholder="all, pods, services"
                             onkeypress={onkeypress}
-                            onchange={onchange}></input>
+                            onchange={onchange} />
                     </div>
                 </div>
             </div>

@@ -7,6 +7,8 @@ import { setPageTitle } from '../models/pageMeta';
 import styles from './ResourceListPage.module.css';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 import { fetchK8sResourceTable, type TableCell } from "../models/resourceData";
+import { FindFilter } from "../components/FindFilter";
+import _ from "lodash";
 
 export const ResourceListPage: Component = () => {
 
@@ -45,7 +47,26 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
         }
     }
 
-    const renderTables = fetchK8sResourceTable(resourceQuery)
+    const [renderTables, { mutate }] = fetchK8sResourceTable(resourceQuery)
+
+    const applyFilter = (s: string) => {
+        const updated = renderTables().map(rt => {
+            rt.rows = rt.rows.map(r => {
+                r.isVisible = r.cells
+                    .map(c => c.value.toString().includes(s))
+                    .reduce((a, b) => a || b)
+                return r
+            })
+
+            // updates require a new instance to notice properties have changed :(
+            return { ...rt }
+        });
+        mutate(updated)
+
+    }
+    const resetFilter = () => {
+        applyFilter("")
+    }
 
     const formatApiResource = (group?: string, version?: string): string => {
         if (!group) {
@@ -71,6 +92,8 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
 
     return (
         <div>
+            <FindFilter applyFilter={applyFilter} removeFilter={resetFilter} />
+
             <For each={renderTables()}>
                 {(rt) =>
                     <Show when={rt.rows.length > 0}>
@@ -90,15 +113,18 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
                             <tbody>
                                 <For each={rt.rows}>
                                     {(row) =>
-                                        <tr>
-                                            <For each={row.cells}>
-                                                {(cell, i) =>
-                                                    <td>
-                                                        {resourceCell(cell, rt.group || "", rt.kind)}
-                                                    </td>
-                                                }
-                                            </For>
-                                        </tr>
+                                        <Show when={row.isVisible}>
+                                            <tr>
+                                                <td>{`${row.isVisible}`}</td>
+                                                <For each={row.cells}>
+                                                    {(cell, i) =>
+                                                        <td>
+                                                            {resourceCell(cell, rt.group || "", rt.kind)}
+                                                        </td>
+                                                    }
+                                                </For>
+                                            </tr>
+                                        </Show>
                                     }
                                 </For>
                             </tbody>

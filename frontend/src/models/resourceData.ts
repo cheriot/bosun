@@ -19,7 +19,7 @@ export const fetchK8sResource = (query: () => ResourceQuery | undefined) => {
 }
 
 export type TableCell = {
-    value: string,
+    value: string | number,
     isName: boolean,
 }
 type TableRow = {
@@ -49,13 +49,11 @@ export const fetchK8sResourceTable = (query: () => ResourcesQuery | undefined) =
             })
     }
 
-    const [tables] = createResource(
+    return createResource(
         query,
         fetchResources,
         { initialValue: [] },
     )
-
-    return tables
 }
 
 const buildRenderTable = (resourceTable: kube.ResourceTable): RenderTable => {
