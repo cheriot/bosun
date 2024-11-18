@@ -22,11 +22,13 @@ export type TableCell = {
     value: string | number,
     isName: boolean,
 }
-type TableRow = {
+export type TableRow = {
     cells: TableCell[]
     isVisible: boolean
+    rowIdx?: number // index among all RenderTables on the page
+    name: string
 }
-type RenderTable = {
+export type RenderTable = {
     kind: string,
     group?: string,
     version?: string,
@@ -40,12 +42,19 @@ export const fetchK8sResourceTable = (query: () => ResourcesQuery | undefined) =
     const fetchResources = (source: ResourcesQuery) => {
         return KubeResourceList(source.k8sCtx, source.k8sNs || "", source.query)
             .then(resourceTables => {
-                return _
-                    .filter(resourceTables, r => r.table)
-                    .map((resourceTable) => {
-                        const r = resourceTable as kube.ResourceTable
-                        return buildRenderTable(r)
-                    })
+                const renderTables = []
+                let rowNum = 0
+                for (let rt of resourceTables) {
+                    if (rt.table) {
+                        const renderTable = buildRenderTable(rt)
+                        renderTable.rows.forEach(r => {
+                            r.isVisible = true
+                            r.rowIdx = rowNum++
+                        })
+                        renderTables.push(renderTable)
+                    }
+                }
+                return renderTables
             })
     }
 
@@ -73,7 +82,8 @@ const buildRenderTable = (resourceTable: kube.ResourceTable): RenderTable => {
         values[0].value = name
         rows[i] = {
             cells: values,
-            isVisible: true
+            isVisible: true,
+            name: name,
         }
     }
 
