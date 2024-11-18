@@ -10,6 +10,7 @@ import { fetchK8sResourceTable, RenderTable, TableRow, type TableCell } from "..
 import { FindFilter } from "../components/FindFilter";
 import _ from "lodash";
 import { addKeyboardCmdListener, KeyboardCmd, removeKeyboardCmdListener } from "../models/keyboardCmd";
+import { makeSelectable } from "../components/SelectableList";
 
 export const ResourceListPage: Component = () => {
 
@@ -82,7 +83,7 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
             navigate(pathResource(params))
         } else console.error('tried to select an idx that does not exist', i)
     }
-    const highlightIdx = makeSelectable(listLength, navToIdx)
+    const [highlightIdx] = makeSelectable(listLength, navToIdx)
 
     // Filter funcs
     const applyFilter = (s: string) => {
@@ -173,33 +174,4 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
             </For>
         </div>
     )
-}
-
-// Keyboard selection j,k,enter
-const makeSelectable = (listLength: () => number, navTo: (idx: number) => void) => {
-    const [highlightedIdx, setHighlightedIdx] = createSignal(0)
-    const matchers = [
-        { cmd: KeyboardCmd.Down, match: { code: 'KeyJ', metaKey: false, shiftKey: false } },
-        { cmd: KeyboardCmd.Up, match: { code: 'KeyK', metaKey: false, shiftKey: false } },
-        { cmd: KeyboardCmd.Select, match: { code: 'Enter', metaKey: false, shiftKey: false } },
-    ]
-    const listenerId = addKeyboardCmdListener(matchers, (keyboardCmd) => {
-        switch (keyboardCmd) {
-            case KeyboardCmd.Down:
-                const nextIdx = (highlightedIdx() + 1) % listLength()
-                setHighlightedIdx(nextIdx)
-                break;
-            case KeyboardCmd.Up:
-                let next = highlightedIdx() - 1
-                next = next >= 0 ? next : listLength() - 1
-                setHighlightedIdx(next)
-                break;
-            case KeyboardCmd.Select:
-                navTo(highlightedIdx())
-                break;
-        }
-    })
-    onCleanup(() => removeKeyboardCmdListener(listenerId))
-
-    return highlightedIdx
 }

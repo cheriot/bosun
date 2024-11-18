@@ -13,13 +13,12 @@ type SelectableListProps = {
 export const SelectableList: Component<SelectableListProps> = (props: SelectableListProps) => {
     const navigate = useNavigate()
     const [store, setStore] = createStore({
-        highlightedIdx: 0,
         list: new Array<string>(),
         originalList: new Array<string>(),
     })
     const filterList = (substr: string) => {
         const toSee = store.originalList.filter(v => v.includes(substr))
-        if (toSee.length != store.list.length) setStore("highlightedIdx", 0)
+        if (toSee.length != store.list.length) resetHighlightIdx()
         setStore("list", toSee)
     }
     const resetList = () => {
@@ -28,12 +27,29 @@ export const SelectableList: Component<SelectableListProps> = (props: Selectable
 
     props.initState().then(result => {
         setStore({
-            highlightedIdx: result.idx,
             list: result.list,
             originalList: result.list
         })
     })
 
+    const listLength = () => store.list.length
+    const navTo = (i: number) => navigate(props.selectPath(store.list[i]))
+    const [highlightIdx, resetHighlightIdx] = makeSelectable(listLength, navTo)
+
+    return <div class="menu">
+        <ul class="menu-list">
+            <FindFilter applyFilter={filterList} removeFilter={resetList} />
+
+            <For each={store.list}>
+                {(c, i) => <li><a classList={{ 'is-active': i() == highlightIdx() }} href={props.selectPath(c)}>{c}</a></li>}
+            </For>
+        </ul>
+    </div>
+}
+
+// Keyboard selection j,k,enter
+export const makeSelectable = (listLength: () => number, navTo: (idx: number) => void) => {
+    const [highlightedIdx, setHighlightedIdx] = createSignal(0)
     const matchers = [
         { cmd: KeyboardCmd.Down, match: { code: 'KeyJ', metaKey: false, shiftKey: false } },
         { cmd: KeyboardCmd.Up, match: { code: 'KeyK', metaKey: false, shiftKey: false } },
@@ -42,27 +58,20 @@ export const SelectableList: Component<SelectableListProps> = (props: Selectable
     const listenerId = addKeyboardCmdListener(matchers, (keyboardCmd) => {
         switch (keyboardCmd) {
             case KeyboardCmd.Down:
-                setStore("highlightedIdx", (store.highlightedIdx + 1) % store.list.length)
+                const nextIdx = (highlightedIdx() + 1) % listLength()
+                setHighlightedIdx(nextIdx)
                 break;
             case KeyboardCmd.Up:
-                let next = store.highlightedIdx - 1
-                next = next >= 0 ? next : store.list.length - 1
-                setStore("highlightedIdx", next)
+                let next = highlightedIdx() - 1
+                next = next >= 0 ? next : listLength() - 1
+                setHighlightedIdx(next)
                 break;
             case KeyboardCmd.Select:
-                navigate(props.selectPath(store.list[store.highlightedIdx]))
+                navTo(highlightedIdx())
                 break;
         }
     })
     onCleanup(() => removeKeyboardCmdListener(listenerId))
 
-    return <div class="menu">
-        <ul class="menu-list">
-            <FindFilter applyFilter={filterList} removeFilter={resetList} />
-
-            <For each={store.list}>
-                {(c, i) => <li><a classList={{ 'is-active': i() == store.highlightedIdx }} href={props.selectPath(c)}>{c}</a></li>}
-            </For>
-        </ul>
-    </div>
+    return [highlightedIdx, () => setHighlightedIdx(0)]
 }
