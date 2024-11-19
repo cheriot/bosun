@@ -5,6 +5,7 @@ import { ResourceQuery } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 import { fetchK8sResource } from "../models/resourceData";
+import { FindText } from "../components/FindFilter";
 
 export const ResourcePage: Component = () => {
     const location = useLocation();
@@ -33,6 +34,8 @@ export const ResourcePage: Component = () => {
 
     return (
         <div>
+            <FindText />
+
             <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>
                 <pre>{resource().describe}</pre>
                 <br />

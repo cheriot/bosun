@@ -1,0 +1,6 @@
+.findFilter {
+    top: 0;
+    position: sticky;
+    max-width: 20em;
+    margin-bottom: 10px;
+}
