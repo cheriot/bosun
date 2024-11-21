@@ -68,10 +68,8 @@ export const Layout: Component = (props: ParentProps) => {
             // Do not evaluate this keypress as a keyboard command
             e.stopPropagation()
         }
-        if (e.code == 'Enter') {
-            // Don't trigger keyboard commands elsewhere on the page
-            e.stopPropagation()
-        }
+        // Don't trigger keyboard commands elsewhere on the page
+        e.stopPropagation()
     }
     let commandInput: HTMLInputElement | undefined
 

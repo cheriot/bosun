@@ -83,11 +83,16 @@ const App: Component = () => {
     // Manage lifecycle of iframes.
     // 1. don't set iframe#src after creation (it triggers a page reload and loses scroll state)
     // 2. set src query's tabId so children can identify themselves
-    // It's undefined afaik on whether this function will be called before or after JSX has
-    // rendered so handle both.
     if (iframeParent) {
-      activeIframe = renderTabIframes(iframeParent, tabs.All, tabs.Current)
+      const nowActive = renderTabIframes(iframeParent, tabs.All, tabs.Current)
+      if (nowActive && nowActive?.getAttribute('id') != activeIframe?.getAttribute('id')) {
+        // Iframe changed. If the focus was on the last iframe, keyboard commands will
+        // happen there instead of the one the user is looking at.
+        nowActive.focus()
+      }
+      activeIframe = nowActive
     } else {
+      // so far the createEffect runs after the function has returned JSX
       console.error('no iframeParent. Need setTimeout?')
     }
   })
