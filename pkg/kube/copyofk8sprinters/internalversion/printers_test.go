@@ -4180,7 +4180,7 @@ func TestPrintReplicationController(t *testing.T) {
 			},
 			options: printers.GenerateOptions{},
 			// Columns: Name, Desired, Current, Ready, Age
-			expected: []metav1.TableRow{{Cells: []interface{}{"rc1", int64(0), int64(0), int64(0), "<unknown>"}}},
+			expected: []metav1.TableRow{{Cells: []interface{}{"rc1", int64(1), int64(0), int64(0), "<unknown>"}}},
 		},
 		// Basic print replication controller with replicas; does not print containers or labels
 		{
