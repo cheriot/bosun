@@ -29,7 +29,7 @@ func TestDeleteMiddle(t *testing.T) {
 
 	tabs.CloseTab("two")
 
-	assert.Equal(t, []Tab{
+	assert.Equal(t, []*Tab{
 		{Id: "one"},
 		{Id: "three"},
 	}, tabs.All)
@@ -43,7 +43,7 @@ func TestDeleteFirst(t *testing.T) {
 
 	tabs.CloseTab("one")
 
-	assert.Equal(t, []Tab{
+	assert.Equal(t, []*Tab{
 		{Id: "two"},
 		{Id: "three"},
 	}, tabs.All)
@@ -71,7 +71,7 @@ func TestPrevTabFirst(t *testing.T) {
 
 func threeTabs() Tabs {
 	return Tabs{
-		All: []Tab{
+		All: []*Tab{
 			{Id: "one"},
 			{Id: "two"},
 			{Id: "three"},
