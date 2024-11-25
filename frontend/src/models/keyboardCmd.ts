@@ -23,6 +23,9 @@ export enum KeyboardCmd {
     FilterFind,
 }
 
+// Exclude keys from keyboard commands so copy/past still work.
+const excludeKeys = ['KeyC', 'KeyV']
+
 export type Key = {
     code: string
     metaKey: boolean
@@ -55,7 +58,7 @@ export const makeKeypressListener = (f: OtherWindowDispatcher): KeyboardListener
         const isInputElement = (e.target as HTMLElement)?.tagName == "INPUT"
         const triggered = triggerListeners(e)
         // const keyboardCmd = matchKeyboardEvent(e)
-        if (triggered || !isInputElement) {
+        if (triggered || (!isInputElement && !excludeKeys.includes(e.code))) {
             // Stops the keyboard command : from being typed into the focused input.
             // Stops the "no handler" sound on desktop.
             // Do not call this for events originating from an input because it will
