@@ -53,6 +53,7 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
+// can this be replaced by https://pkg.go.dev/k8s.io/client-go/kubernetes/scheme ?
 var schemeBuilder = runtime.SchemeBuilder{
 	admissionv1.AddToScheme,
 	admissionv1beta1.AddToScheme,

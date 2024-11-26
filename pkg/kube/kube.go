@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"bosun/pkg/kube/relations"
 	"bosun/pkg/logging"
 	"bosun/pkg/util"
 
@@ -150,9 +151,10 @@ func findAPIResourcesFuzzy(apiResources []metav1.APIResource, identifier string)
 }
 
 type Resource struct {
-	Describe string  `json:"describe"`
-	Yaml     string  `json:"yaml"`
-	Errors   []error `json:"errors"`
+	Describe   string                `json:"describe"`
+	Yaml       string                `json:"yaml"`
+	References []relations.Reference `json:"references"`
+	Errors     []error               `json:"errors"`
 }
 
 func (kc *KubeCluster) GetResource(ctx context.Context, nsName string, group string, kind string, resourceName string) (*Resource, error) {
@@ -177,6 +179,11 @@ func (kc *KubeCluster) GetResource(ctx context.Context, nsName string, group str
 		errors = append(errors, fmt.Errorf("unable to serialize yaml: %w", err))
 	}
 
+	refs, err := relations.UnstructuredReferences(kc.scheme, unstructured)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("unable to extract references: %w", err))
+	}
+
 	// Sucks that this queries apiserver for the same object as above, but it's baked
 	// into the kubectl lib for describe.
 	describeStr, err := kc.Describe(ctx, nsName, group, kind, resourceName)
@@ -185,9 +192,10 @@ func (kc *KubeCluster) GetResource(ctx context.Context, nsName string, group str
 	}
 
 	return &Resource{
-		Yaml:     yamlStr,
-		Describe: describeStr,
-		Errors:   errors,
+		Yaml:       yamlStr,
+		Describe:   describeStr,
+		References: refs,
+		Errors:     errors,
 	}, nil
 }
 
