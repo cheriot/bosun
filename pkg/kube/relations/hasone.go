@@ -3,20 +3,54 @@ package relations
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
+type RelationType int
+
+const (
+	// Single object identified precisely (Pod -> Node)
+	HasOne RelationType = iota
+	// Search by group, kind, and labels (Service -> Pods)
+	LabelSearch
+	// Search that requires querying all objects of a group, kind (Node -> Pods)
+	AttributeSearch
+)
+
+var AllRelationTypes = []RelationType{HasOne, LabelSearch, AttributeSearch}
+
+func (w RelationType) String() string {
+	switch w {
+	case HasOne:
+		return "HAS_ONE"
+	case LabelSearch:
+		return "LABLE_SEARCH"
+	case AttributeSearch:
+		return "ATTRIBUTE_SEARCH"
+	default:
+		return "???"
+	}
+}
+
+func (w RelationType) TSName() string {
+	return w.String()
+}
+
 type Reference struct {
+	RelationType
 	Group     string
 	Version   string
 	Kind      string
 	Name      string
 	Namespace string
+	Note      string
 }
 
 func UnstructuredReferences(s *runtime.Scheme, u *unstructured.Unstructured) ([]Reference, error) {
@@ -56,32 +90,36 @@ func UnstructuredReferences(s *runtime.Scheme, u *unstructured.Unstructured) ([]
 
 var PodReferences = func(p *corev1.Pod) (refs []Reference) {
 	refs = append(refs, Reference{
-		Group:   corev1.SchemeGroupVersion.Group,
-		Version: corev1.SchemeGroupVersion.Version,
-		Kind:    "Namespace",
-		Name:    p.GetNamespace(),
+		RelationType: HasOne,
+		Group:        corev1.SchemeGroupVersion.Group,
+		Version:      corev1.SchemeGroupVersion.Version,
+		Kind:         "Namespace",
+		Name:         p.GetNamespace(),
 	})
+
+	refs = append(refs, FromOwnerReferences(p.GetOwnerReferences())...)
 
 	if p.Spec.NodeName != "" {
 		refs = append(refs, Reference{
-			Group:   corev1.SchemeGroupVersion.Group,
-			Version: corev1.SchemeGroupVersion.Version,
-			Kind:    "Node",
-			Name:    p.Spec.NodeName,
+			RelationType: HasOne,
+			Group:        corev1.SchemeGroupVersion.Group,
+			Version:      corev1.SchemeGroupVersion.Version,
+			Kind:         "Node",
+			Name:         p.Spec.NodeName,
 		})
 	}
 
 	if p.Spec.ServiceAccountName != "" {
 		refs = append(refs, Reference{
-			Group:   corev1.SchemeGroupVersion.Group,
-			Version: corev1.SchemeGroupVersion.Version,
-			Kind:    "ServiceAccount",
-			Name:    p.Spec.ServiceAccountName,
+			RelationType: HasOne,
+			Group:        corev1.SchemeGroupVersion.Group,
+			Version:      corev1.SchemeGroupVersion.Version,
+			Kind:         "ServiceAccount",
+			Name:         p.Spec.ServiceAccountName,
 		})
 	}
 
 	// Mounted configmaps
-	// Owners
 
 	return
 }
@@ -100,6 +138,32 @@ func KindKey(o runtime.Object) schema.GroupKind {
 		panic(fmt.Sprintf("found too many ObjectKinds for %T: %d %t", o, len(gvks), unversioned))
 	}
 	return gvks[0].GroupKind()
+}
+
+func FromOwnerReferences(ors []metav1.OwnerReference) (refs []Reference) {
+	for _, or := range ors {
+		// ReplicaSet: apps/v1
+		// Pod: v1
+		parts := strings.Split(or.APIVersion, "/")
+		var group, version string
+		if len(parts) == 1 {
+			version = parts[0]
+		}
+		if len(parts) == 2 {
+			group = parts[0]
+			version = parts[1]
+		}
+
+		refs = append(refs, Reference{
+			RelationType: HasOne,
+			Group:        group,
+			Version:      version,
+			Kind:         or.Kind,
+			Name: or.Name,
+		})
+	}
+
+	return
 }
 
 var refFuncs = map[schema.GroupKind]any{

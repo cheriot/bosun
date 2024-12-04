@@ -12,6 +12,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 
 	"bosun/pkg/desktop"
+	"bosun/pkg/kube/relations"
 	blog "bosun/pkg/logging"
 )
 
@@ -53,6 +54,7 @@ func main() {
 		Bind: []interface{}{
 			app.GetApi(),
 		},
+		EnumBind: []interface{}{relations.AllRelationTypes},
 		// Windows platform specific options
 		Windows: &windows.Options{
 			WebviewIsTransparent: false,

@@ -1,10 +1,16 @@
+.tabColumn {
+  background-color: hsl(0, 0%, 94%);
+}
+
 .tabList {
   margin-top: 44px;
+  height: 100vh;
 }
 
 a.newTab {
   padding-top: 0;
   padding-bottom: 0;
+  background-color: hsl(0, 0%, 94%);
 }
 
 .tabClose {
@@ -20,10 +26,30 @@ a.tabMenuItem {
   border-radius: 0;
   position: relative;
   padding-right: 30px;
+  background-color: hsl(0, 0%, 94%);
 }
 
-a.tabMenuItem:hover .tabClose {
+.tabMenuItem.isActiveAlt, .tabMenuItem.isActiveAlt:hover {
+  background-color: white;
+}
+
+.newTab:hover, .tabMenuItem:hover {
+  background-color: hsl(0, 0%, 98%);
+}
+
+.tabMenuItem:hover .tabClose {
   display: inline;
+}
+
+.tabMenuItem .title {
+}
+.tabMenuItem .namespace {
+  /* color: hsl(0, 0%, 29%); */
+  font-size: 0.75rem;
+}
+
+.tabMenuItem .context {
+  font-size: 0.75rem;
 }
 
 .debugPath {

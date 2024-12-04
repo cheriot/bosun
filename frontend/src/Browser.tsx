@@ -110,21 +110,21 @@ const App: Component = () => {
     <div class="columns is-gapless">
 
       {/* sidebar for tabs */}
-      <div class="column is-narrow">
+      <div class={`column is-narrow ${styles.tabColumn}`}>
         <aside class={`menu ${styles.tabList}`}>
           <ul class="menu-list">
             <For each={tabs.All}>
               {(item) =>
-                <li>
+                <li class="is-family-monospace">
                   <a
                     class={styles.tabMenuItem}
-                    classList={{ 'is-active': tabs.Current === item.Id }}
+                    classList={{ [styles.isActiveAlt]: tabs.Current === item.Id }}
                     onclick={() => {
                       selectTab(item.Id)
                     }}>
-                    <div>{item.Title}</div>
-                    <div>{item.K8sNamespace}</div>
-                    <div>{item.K8sContext}</div>
+                    <div class={styles.title}>{item.Title}</div>
+                    <div class={styles.namespace}>{item.K8sNamespace}</div>
+                    <div class={styles.context}>{item.K8sContext}</div>
                     <div
                       class={styles.tabClose}
                       onclick={(e: Event) => {

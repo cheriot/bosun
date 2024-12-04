@@ -46,3 +46,25 @@ func TestPodReferences(t *testing.T) {
 func TestKindKey(t *testing.T) {
 	assert.Equal(t, schema.GroupKind(schema.GroupKind{Group: "", Kind: "Pod"}), KindKey(&corev1.Pod{}))
 }
+
+func TestOwnerReferences(t *testing.T) {
+	rs := FromOwnerReferences([]metav1.OwnerReference{
+		{
+			APIVersion: "apps/v1",
+			Kind:       "ReplicaSet",
+			Name:       "coredns-576bfc4dc7",
+		},
+		{
+			APIVersion: "v1",
+			Kind:       "Pod",
+			Name:       "foo",
+		},
+	})
+
+	assert.Len(t, rs, 2)
+	assert.Equal(t, rs[0].Group, "apps")
+	assert.Equal(t, rs[1].Group, "")
+
+	rs = FromOwnerReferences(nil)
+	assert.Nil(t, rs)
+}

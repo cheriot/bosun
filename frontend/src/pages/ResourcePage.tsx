@@ -7,6 +7,7 @@ import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
 import { fetchK8sResource } from "../models/resourceData";
 import { FindText } from "../components/FindFilter";
 import { relations } from "../../wailsjs/go/models";
+import styles from './ResourcePage.module.css';
 
 export const ResourcePage: Component = () => {
     const location = useLocation();
@@ -55,13 +56,22 @@ export const ResourcePage: Component = () => {
         <div>
             <FindText />
 
-            <ul>
+            <Show when={resource().references}>
+                Related: &nbsp;
                 <For each={resource().references}>
-                    {(rel: relations.Reference) =>
-                        <li><a href={relationPath(rel)}>{rel.Kind}</a></li>
+                    {(rel: relations.Reference, i) =>
+                        <span>
+                            <a href={relationPath(rel)}>
+                                {rel.Kind.toLowerCase()}
+                            </a>
+                            <Show when={i() != resource().references.length - 1}>
+                                ,
+                            </Show>
+                            &nbsp;
+                        </span>
                     }
                 </For>
-            </ul>
+            </Show>
 
             {/* <pre>
                 refs
@@ -69,10 +79,10 @@ export const ResourcePage: Component = () => {
             </pre> */}
 
             <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>
-                <pre>{resource().describe}</pre>
+                <pre class={styles.mainContent}>{resource().describe}</pre>
                 <br />
                 <br />
-                <pre>{resource().yaml}</pre>
+                <pre class={styles.mainContent}>{resource().yaml}</pre>
             </Show>
         </div>
     )
