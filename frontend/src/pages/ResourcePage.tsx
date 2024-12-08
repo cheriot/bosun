@@ -56,33 +56,43 @@ export const ResourcePage: Component = () => {
         <div>
             <FindText />
 
-            <Show when={resource().references}>
-                Related: &nbsp;
-                <For each={resource().references}>
-                    {(rel: relations.Reference, i) =>
-                        <span>
-                            <a href={relationPath(rel)}>
-                                {rel.Kind.toLowerCase()}
-                            </a>
-                            <Show when={i() != resource().references.length - 1}>
-                                ,
-                            </Show>
-                            &nbsp;
-                        </span>
-                    }
-                </For>
+            <Show when={['pending', 'refreshing'].includes(resource.state)}>
+                loading...
             </Show>
 
-            {/* <pre>
+            <Show when={['errored'].includes(resource.state)}>
+                error
+            </Show>
+
+            <Show when={resource.state == 'ready'}>
+                <Show when={resource().references}>
+                    Related: &nbsp;
+                    <For each={resource().references}>
+                        {(rel: relations.Reference, i) =>
+                            <span>
+                                <a href={relationPath(rel)}>
+                                    {rel.Kind.toLowerCase()}
+                                </a>
+                                <Show when={i() != resource().references.length - 1}>
+                                    ,
+                                </Show>
+                                &nbsp;
+                            </span>
+                        }
+                    </For>
+                </Show>
+
+                {/* <pre>
                 refs
                 {JSON.stringify(resource().references, null, 4)}
             </pre> */}
 
-            <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>
-                <pre class={styles.mainContent}>{resource().describe}</pre>
-                <br />
-                <br />
-                <pre class={styles.mainContent}>{resource().yaml}</pre>
+                <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>
+                    <pre class={styles.mainContent}>{resource().describe}</pre>
+                    <br />
+                    <br />
+                    <pre class={styles.mainContent}>{resource().yaml}</pre>
+                </Show>
             </Show>
         </div>
     )

@@ -12,6 +12,7 @@ export const fetchK8sResource = (query: () => ResourceQuery | undefined) => {
     const [resource] = createResource(
         query,
         fetchResource,
+        { initialValue: kube.Resource.createFrom({}) }
     )
 
     return resource

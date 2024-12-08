@@ -41,15 +41,9 @@ a.tabMenuItem {
   display: inline;
 }
 
-.tabMenuItem .title {
-}
-.tabMenuItem .namespace {
+.tabMenuItem .namespace, .tabMenuItem .context {
   /* color: hsl(0, 0%, 29%); */
-  font-size: 0.75rem;
-}
-
-.tabMenuItem .context {
-  font-size: 0.75rem;
+  font-size: 0.6rem;
 }
 
 .debugPath {
