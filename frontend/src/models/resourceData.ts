@@ -12,7 +12,6 @@ export const fetchK8sResource = (query: () => ResourceQuery | undefined) => {
     const [resource] = createResource(
         query,
         fetchResource,
-        { initialValue: kube.Resource.createFrom({}) },
     )
 
     return resource
@@ -32,6 +31,7 @@ export type RenderTable = {
     kind: string,
     group?: string,
     version?: string,
+    errorMsg?: string,
     // In both headers and rows, undefined is a placeholder for name,
     // which will be rendered differently.
     headers: TableCell[],
@@ -66,6 +66,17 @@ export const fetchK8sResourceTable = (query: () => ResourcesQuery | undefined) =
 }
 
 const buildRenderTable = (resourceTable: kube.ResourceTable): RenderTable => {
+    if (resourceTable.isError) {
+        return {
+            kind: resourceTable.apiResource.kind,
+            group: resourceTable.apiResource.group,
+            version: resourceTable.apiResource.version,
+            errorMsg: 'Unable to generate table.',
+            headers: [],
+            rows: [],
+        }
+    }
+
     const table = resourceTable.table as v1.Table
     const headers = table.columnDefinitions.map(h => { return { value: h.name, isName: false } })
     if (headers[0].value.toLowerCase() != "name") console.error('expected the name in column one', resourceTable)

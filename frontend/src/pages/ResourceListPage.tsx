@@ -131,47 +131,77 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
         return cell.value
     }
 
+    const isEmpty = () => {
+        if (renderTables && renderTables.state == "ready") {
+            const total = renderTables().map((rt) => rt.rows.length).reduce((sum, l) => sum + l)
+            return total == 0
+        }
+        return false
+    }
+
     return (
         <div>
             <FindFilter applyFilter={applyFilter} removeFilter={resetFilter} />
 
+            <Show when={['pending', 'refreshing'].includes(renderTables.state)}>
+                loading...
+            </Show>
+
+            <Show when={['errored'].includes(renderTables.state)}>
+                error
+            </Show>
+
+            <Show when={isEmpty()}>
+                empty
+            </Show>
+
             <For each={renderTables()}>
                 {(rt) =>
-                    <Show when={rt.rows.length > 0}>
-                        <Show when={renderTables().length > 1}>
+                    <div>
+                        <Show when={rt.errorMsg || rt.rows.length > 0}>
                             <p class="is-size-5 is-lowercase">{rt.kind} <span>{formatApiResource(rt.group, rt.version)}</span></p>
                         </Show>
-                        <table class="table is-striped">
-                            <thead>
-                                <tr>
-                                    <For each={rt.headers}>
-                                        {(h) =>
-                                            <th class={styles.columnHeader}>{h.value}</th>
+
+                        <Show when={rt.errorMsg}>
+                            <p>{rt.errorMsg}</p>
+                        </Show>
+
+                        <Show when={rt.rows.length > 0}>
+                            <table class="table is-striped">
+                                <thead>
+                                    <tr>
+                                        <For each={rt.headers}>
+                                            {(h) =>
+                                                <th class={styles.columnHeader}>{h.value}</th>
+                                            }
+                                        </For>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <For each={rt.rows}>
+                                        {(row) =>
+                                            <Show when={row.isVisible}>
+                                                <tr classList={{ 'is-link': highlightIdx() == row.rowIdx }}>
+                                                    <For each={row.cells}>
+                                                        {(cell) =>
+                                                            <td>
+                                                                {resourceCell(cell, rt.group || "", rt.kind)}
+                                                            </td>
+                                                        }
+                                                    </For>
+                                                </tr>
+                                            </Show>
                                         }
                                     </For>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <For each={rt.rows}>
-                                    {(row) =>
-                                        <Show when={row.isVisible}>
-                                            <tr classList={{ 'is-link': highlightIdx() == row.rowIdx }}>
-                                                <For each={row.cells}>
-                                                    {(cell) =>
-                                                        <td>
-                                                            {resourceCell(cell, rt.group || "", rt.kind)}
-                                                        </td>
-                                                    }
-                                                </For>
-                                            </tr>
-                                        </Show>
-                                    }
-                                </For>
-                            </tbody>
-                        </table>
-                    </Show>
+                                </tbody>
+                            </table>
+                        </Show>
+                    </div>
                 }
             </For>
+
+            <br />
+            <pre>{JSON.stringify(renderTables(), null, 4)}</pre>
         </div>
     )
 }
