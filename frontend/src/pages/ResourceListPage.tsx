@@ -181,7 +181,11 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
                                     <For each={rt.rows}>
                                         {(row) =>
                                             <Show when={row.isVisible}>
-                                                <tr classList={{ 'is-link': highlightIdx() == row.rowIdx }}>
+                                                <tr classList={{
+                                                     'is-link': highlightIdx() == row.rowIdx,
+                                                     [styles.isLink]: highlightIdx() == row.rowIdx
+
+                                                }}>
                                                     <For each={row.cells}>
                                                         {(cell) =>
                                                             <td>

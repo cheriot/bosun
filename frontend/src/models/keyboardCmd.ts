@@ -24,7 +24,7 @@ export enum KeyboardCmd {
 }
 
 // Exclude keys from keyboard commands so copy/past still work.
-const excludeKeys = ['KeyC', 'KeyV']
+const excludeKeys = ['KeyC', 'KeyV', 'KeyQ']
 
 export type Key = {
     code: string

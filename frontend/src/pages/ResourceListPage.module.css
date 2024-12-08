@@ -1,7 +1,9 @@
-.resourceKind {}
-
 table thead th.columnHeader {
     font-weight: normal;
     text-transform: uppercase;
     white-space: nowrap;
+}
+
+.isLink a {
+    color: white;
 }
