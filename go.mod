@@ -3,7 +3,9 @@ module bosun
 go 1.23.1
 
 require (
+	github.com/adrg/xdg v0.5.3
 	github.com/dchest/uniuri v1.2.0
+	github.com/goccy/go-yaml v1.15.7
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.9.0
 	github.com/wailsapp/wails/v2 v2.9.2
@@ -78,7 +80,7 @@ require (
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.3.0 // indirect

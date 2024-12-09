@@ -2,7 +2,11 @@ package desktop
 
 import (
 	"context"
+
+	"bosun/pkg/logging"
 )
+
+var log = logging.Default()
 
 // App struct
 type App struct {

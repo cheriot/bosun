@@ -19,6 +19,12 @@ type Tabs struct {
 	All     []*Tab
 }
 
+func MakeInitialTabs() *Tabs {
+	t := &Tabs{}
+	t.NewTab()
+	return t
+}
+
 func (t *Tabs) Update(id string, k8sCtx string, k8sNs string, path string, title string) {
 	found, idx := t.findTab(id)
 	if found {

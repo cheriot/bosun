@@ -19,7 +19,7 @@ func PrintList(scheme *runtime.Scheme, ar metav1.APIResource, uList *unstructure
 	if isRegistered {
 		table, err := printRegistered(scheme, ar, uList)
 		if err != nil {
-			log.Info("printRegistered error, falling back to printUnstructured: %v", err)
+			log.Info("printRegistered error, falling back to printUnstructured", "error", err)
 		} else {
 			return table, nil
 		}

@@ -159,7 +159,7 @@ func FromOwnerReferences(ors []metav1.OwnerReference) (refs []Reference) {
 			Group:        group,
 			Version:      version,
 			Kind:         or.Kind,
-			Name: or.Name,
+			Name:         or.Name,
 		})
 	}
 
