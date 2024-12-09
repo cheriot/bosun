@@ -27,6 +27,7 @@ a.tabMenuItem {
   position: relative;
   padding-right: 30px;
   background-color: hsl(0, 0%, 94%);
+  max-width: 15rem;
 }
 
 .tabMenuItem.isActiveAlt, .tabMenuItem.isActiveAlt:hover {
