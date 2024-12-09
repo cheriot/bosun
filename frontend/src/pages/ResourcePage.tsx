@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import { createEffect, createResource, Show, on, For } from "solid-js"
+import { createEffect, createSignal, Show, on, For } from "solid-js"
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { pathResource, ResourceQuery } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
@@ -52,6 +52,11 @@ export const ResourcePage: Component = () => {
 
     const resource = fetchK8sResource(resourceQuery)
 
+        const describeTab = 'describe'
+        const yamlTab = 'yaml'
+        const nsTabs = [describeTab, yamlTab]
+        const [selectedTab, setSelectedTab] = createSignal(describeTab)
+
     return (
         <div>
             <FindText />
@@ -82,16 +87,24 @@ export const ResourcePage: Component = () => {
                     </For>
                 </Show>
 
-                {/* <pre>
-                refs
-                {JSON.stringify(resource().references, null, 4)}
-            </pre> */}
+                <div class="tabs">
+                    <ul>
+                        <For each={nsTabs}>
+                            {(t) =>
+                                <li classList={{ "is-active": t == selectedTab() }}>
+                                    <a onclick={() => setSelectedTab(t)}>{t}</a>
+                                </li>
+                            }
+                        </For>
+                    </ul>
+                </div>
 
-                <Show when={resource().yaml} fallback={`Unable to find ${searchParams.kind} ${searchParams.name} in ${searchParams.k8sNs} namespace.`}>
-                    <pre class={styles.mainContent}>{resource().describe}</pre>
-                    <br />
-                    <br />
-                    <pre class={styles.mainContent}>{resource().yaml}</pre>
+                <Show when={selectedTab() == describeTab}>
+                    <pre>{resource().describe}</pre>
+                </Show>
+
+                <Show when={selectedTab() == yamlTab}>
+                    <pre>{resource().yaml}</pre>
                 </Show>
             </Show>
         </div>
