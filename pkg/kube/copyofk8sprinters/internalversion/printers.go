@@ -35,7 +35,6 @@ import (
 	discoveryv1beta1 "k8s.io/api/discovery/v1beta1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	flowcontrolv1beta2 "k8s.io/api/flowcontrol/v1beta2"
-	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	storagev1alpha1 "k8s.io/api/storage/v1alpha1"
@@ -80,7 +79,7 @@ import (
 	//"k8s.io/kubernetes/pkg/apis/policy"
 	policy "k8s.io/api/policy/v1"
 	//"k8s.io/kubernetes/pkg/apis/rbac"
-	rbac "k8s.io/api/rbac/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	//"k8s.io/kubernetes/pkg/apis/scheduling"
 	scheduling "k8s.io/api/scheduling/v1"
 	//"k8s.io/kubernetes/pkg/apis/storage"
@@ -408,7 +407,7 @@ func AddHandlers(h printers.PrintHandler) {
 
 	roleBindingsColumnDefinitions := []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
-		{Name: "Role", Type: "string", Description: rbacv1beta1.RoleBinding{}.SwaggerDoc()["roleRef"]},
+		{Name: "Role", Type: "string", Description: rbacv1.RoleBinding{}.SwaggerDoc()["roleRef"]},
 		{Name: "Age", Type: "string", Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"]},
 		{Name: "Users", Type: "string", Priority: 1, Description: "Users in the roleBinding"},
 		{Name: "Groups", Type: "string", Priority: 1, Description: "Groups in the roleBinding"},
@@ -419,7 +418,7 @@ func AddHandlers(h printers.PrintHandler) {
 
 	clusterRoleBindingsColumnDefinitions := []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
-		{Name: "Role", Type: "string", Description: rbacv1beta1.ClusterRoleBinding{}.SwaggerDoc()["roleRef"]},
+		{Name: "Role", Type: "string", Description: rbacv1.ClusterRoleBinding{}.SwaggerDoc()["roleRef"]},
 		{Name: "Age", Type: "string", Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"]},
 		{Name: "Users", Type: "string", Priority: 1, Description: "Users in the clusterRoleBinding"},
 		{Name: "Groups", Type: "string", Priority: 1, Description: "Groups in the clusterRoleBinding"},
@@ -1878,7 +1877,7 @@ func printEventList(list *api.EventList, options printers.GenerateOptions) ([]me
 	return rows, nil
 }
 
-func SubjectsStrings(subjects []rbac.Subject) ([]string, []string, []string, []string) {
+func SubjectsStrings(subjects []rbacv1.Subject) ([]string, []string, []string, []string) {
 	users := []string{}
 	groups := []string{}
 	sas := []string{}
@@ -1886,13 +1885,13 @@ func SubjectsStrings(subjects []rbac.Subject) ([]string, []string, []string, []s
 
 	for _, subject := range subjects {
 		switch subject.Kind {
-		case rbac.ServiceAccountKind:
+		case rbacv1.ServiceAccountKind:
 			sas = append(sas, fmt.Sprintf("%s/%s", subject.Namespace, subject.Name))
 
-		case rbac.UserKind:
+		case rbacv1.UserKind:
 			users = append(users, subject.Name)
 
-		case rbac.GroupKind:
+		case rbacv1.GroupKind:
 			groups = append(groups, subject.Name)
 
 		default:
@@ -1903,7 +1902,7 @@ func SubjectsStrings(subjects []rbac.Subject) ([]string, []string, []string, []s
 	return users, groups, sas, others
 }
 
-func printRoleBinding(obj *rbac.RoleBinding, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+func printRoleBinding(obj *rbacv1.RoleBinding, options printers.GenerateOptions) ([]metav1.TableRow, error) {
 	row := metav1.TableRow{
 		Object: runtime.RawExtension{Object: obj},
 	}
@@ -1918,7 +1917,7 @@ func printRoleBinding(obj *rbac.RoleBinding, options printers.GenerateOptions) (
 }
 
 // Prints the RoleBinding in a human-friendly format.
-func printRoleBindingList(list *rbac.RoleBindingList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+func printRoleBindingList(list *rbacv1.RoleBindingList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
 	rows := make([]metav1.TableRow, 0, len(list.Items))
 	for i := range list.Items {
 		r, err := printRoleBinding(&list.Items[i], options)
@@ -1930,7 +1929,7 @@ func printRoleBindingList(list *rbac.RoleBindingList, options printers.GenerateO
 	return rows, nil
 }
 
-func printClusterRoleBinding(obj *rbac.ClusterRoleBinding, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+func printClusterRoleBinding(obj *rbacv1.ClusterRoleBinding, options printers.GenerateOptions) ([]metav1.TableRow, error) {
 	row := metav1.TableRow{
 		Object: runtime.RawExtension{Object: obj},
 	}
@@ -1945,7 +1944,7 @@ func printClusterRoleBinding(obj *rbac.ClusterRoleBinding, options printers.Gene
 }
 
 // Prints the ClusterRoleBinding in a human-friendly format.
-func printClusterRoleBindingList(list *rbac.ClusterRoleBindingList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+func printClusterRoleBindingList(list *rbacv1.ClusterRoleBindingList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
 	rows := make([]metav1.TableRow, 0, len(list.Items))
 	for i := range list.Items {
 		r, err := printClusterRoleBinding(&list.Items[i], options)

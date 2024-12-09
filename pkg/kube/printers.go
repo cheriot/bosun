@@ -19,9 +19,10 @@ func PrintList(scheme *runtime.Scheme, ar metav1.APIResource, uList *unstructure
 	if isRegistered {
 		table, err := printRegistered(scheme, ar, uList)
 		if err != nil {
-			return nil, fmt.Errorf("printRegistered error: %w", err)
+			log.Info("printRegistered error, falling back to printUnstructured: %v", err)
+		} else {
+			return table, nil
 		}
-		return table, nil
 	}
 
 	// fallback to [name, age] if no printer
