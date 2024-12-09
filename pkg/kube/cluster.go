@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"sort"
 	"strings"
 
 	blog "bosun/pkg/logging"
@@ -131,6 +132,17 @@ func fetchAllApiResources(restClientConfig *restclient.Config) ([]metav1.APIReso
 		}
 	}
 
+	// Quirky default: sort default groups first, service before pod
+	sort.Slice(apiResources, func(i, j int) bool {
+		igl := len(apiResources[i].Group)
+		jgl := len(apiResources[j].Group)
+
+		if igl != jgl {
+			return igl < jgl
+		}
+
+		return apiResources[i].Kind > apiResources[j].Kind
+	})
 	return apiResources, nil
 }
 

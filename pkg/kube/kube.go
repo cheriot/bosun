@@ -241,6 +241,7 @@ func (kc *KubeCluster) Describe(ctx context.Context, nsName string, group string
 			}
 
 			describer, found = describe.GenericDescriberFor(restMapping, kc.restClientConfig)
+			log.Info("using GenericDescriber")
 			if !found {
 				return "", fmt.Errorf("unable to create a GenericDescriberFor %v", apiResource)
 			}
