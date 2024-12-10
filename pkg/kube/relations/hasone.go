@@ -54,6 +54,8 @@ type Reference struct {
 }
 
 func UnstructuredReferences(s *runtime.Scheme, u *unstructured.Unstructured) ([]Reference, error) {
+	refs := MetaReferences(u)
+
 	gk := u.GetObjectKind().GroupVersionKind().GroupKind()
 	if gk.Kind == "" {
 		return nil, fmt.Errorf("no kind for %v", u)
@@ -70,7 +72,7 @@ func UnstructuredReferences(s *runtime.Scheme, u *unstructured.Unstructured) ([]
 
 	f := refFuncs[gk]
 	if f == nil {
-		return nil, nil
+		return refs, nil
 	}
 
 	// Call the function for this GroupKind
@@ -85,20 +87,11 @@ func UnstructuredReferences(s *runtime.Scheme, u *unstructured.Unstructured) ([]
 		return nil, fmt.Errorf("return type of refFuncs %v was not the expected Reference", gk)
 	}
 
-	return typed, nil
+	refs = append(refs, typed...)
+	return refs, nil
 }
 
 var PodReferences = func(p *corev1.Pod) (refs []Reference) {
-	refs = append(refs, Reference{
-		RelationType: HasOne,
-		Group:        corev1.SchemeGroupVersion.Group,
-		Version:      corev1.SchemeGroupVersion.Version,
-		Kind:         "Namespace",
-		Name:         p.GetNamespace(),
-	})
-
-	refs = append(refs, FromOwnerReferences(p.GetOwnerReferences())...)
-
 	if p.Spec.NodeName != "" {
 		refs = append(refs, Reference{
 			RelationType: HasOne,
@@ -164,6 +157,25 @@ func FromOwnerReferences(ors []metav1.OwnerReference) (refs []Reference) {
 	}
 
 	return
+}
+
+func MetaReferences(u *unstructured.Unstructured) []Reference {
+	refs := make([]Reference, 0)
+
+	ns := u.GetNamespace()
+	if ns != "" {
+		refs = append(refs, Reference{
+			RelationType: HasOne,
+			Group:        corev1.SchemeGroupVersion.Group,
+			Version:      corev1.SchemeGroupVersion.Version,
+			Kind:         "Namespace",
+			Name:         ns,
+		})
+	}
+
+	refs = append(refs, FromOwnerReferences(u.GetOwnerReferences())...)
+
+	return refs
 }
 
 var refFuncs = map[schema.GroupKind]any{

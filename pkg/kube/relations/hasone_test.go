@@ -25,6 +25,12 @@ func TestPodReferences(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example-pod",
 			Namespace: "my-app",
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: "apps/v1",
+					Name: "some-replicaset-skwod",
+				},
+			},
 		},
 	}
 	assert.Equal(t, schema.GroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Pod"}), p.GetObjectKind().GroupVersionKind())
@@ -39,8 +45,12 @@ func TestPodReferences(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, refs)
 
-	assert.Equal(t, "Namespace", refs[0].Kind)
-	assert.Equal(t, p.GetNamespace(), refs[0].Name)
+	nsRef := refs[0]
+	assert.Equal(t, "Namespace", nsRef.Kind)
+	assert.Equal(t, p.GetNamespace(), nsRef.Name)
+
+	ownerRef := refs[1]
+	assert.Equal(t, p.GetOwnerReferences()[0].Name, ownerRef.Name)
 }
 
 func TestKindKey(t *testing.T) {
@@ -63,7 +73,9 @@ func TestOwnerReferences(t *testing.T) {
 
 	assert.Len(t, rs, 2)
 	assert.Equal(t, rs[0].Group, "apps")
+	assert.Equal(t, rs[0].Version, "v1")
 	assert.Equal(t, rs[1].Group, "")
+	assert.Equal(t, rs[1].Version, "v1")
 
 	rs = FromOwnerReferences(nil)
 	assert.Nil(t, rs)

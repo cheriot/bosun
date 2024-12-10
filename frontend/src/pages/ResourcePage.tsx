@@ -100,11 +100,11 @@ export const ResourcePage: Component = () => {
                 </div>
 
                 <Show when={selectedTab() == describeTab}>
-                    <pre>{resource().describe}</pre>
+                    <pre class={styles.mainContent}>{resource().describe}</pre>
                 </Show>
 
                 <Show when={selectedTab() == yamlTab}>
-                    <pre>{resource().yaml}</pre>
+                    <pre class={styles.mainContent}>{resource().yaml}</pre>
                 </Show>
             </Show>
         </div>
