@@ -136,7 +136,7 @@ func KindKey(o runtime.Object) schema.GroupKind {
 }
 
 func FromOwnerReferences(ors []metav1.OwnerReference) (refs []Reference) {
-	for _, or := range ors {
+	for i, or := range ors {
 		// ReplicaSet: apps/v1
 		// Pod: v1
 		parts := strings.Split(or.APIVersion, "/")
@@ -155,6 +155,7 @@ func FromOwnerReferences(ors []metav1.OwnerReference) (refs []Reference) {
 			Version:      version,
 			Kind:         or.Kind,
 			Name:         or.Name,
+			Property:     fmt.Sprintf(".metadata.ownerReferences[%d].name", i),
 		})
 	}
 

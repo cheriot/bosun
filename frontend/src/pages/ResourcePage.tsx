@@ -135,7 +135,7 @@ const Yaml: Component<YamlProps> = (props: YamlProps) => {
                 <span class={styles.yamlValue}>null</span>
             </Match>
             <Match when={typeof (props.value) === "string"}>
-                <span class={styles.yamlValue}>
+                <span class={styles.yamlValue} data-prop={prefix}>
                     <YamlString value={props.value} prefix={prefix} references={props.references}/>
                 </span>
             </Match>
@@ -146,11 +146,11 @@ const Yaml: Component<YamlProps> = (props: YamlProps) => {
                     </Match>
                     <Match when={true}>
                         <For each={props.value}>
-                            {v =>
+                            {(v, idx) =>
                                 <ol style={indentStyle} class={styles.yamlArray}>
                                     <li>
                                         <div class={styles.yamlArrayEntry}>
-                                            <Yaml value={v} indent={0} prefix={prefix + "[]"} references={props.references}/>
+                                            <Yaml value={v} indent={0} prefix={`${prefix}[${idx()}]`} references={props.references}/>
                                         </div>
                                     </li>
                                 </ol>
