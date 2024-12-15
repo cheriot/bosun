@@ -1,4 +1,31 @@
 .mainContent {
     background-color: white;
     padding-left: 0;
+    font-family: Menlo, Inconsolata, Hack, "SF Mono", "Roboto Mono", "Source Code Pro", "Ubuntu Mono", monospace;
+    font-weight: var(--bulma-body-weight);
+    font-size: 14px;
+}
+
+.yamlValue {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.yamlKey {
+    white-space: nowrap;
+}
+
+.yamlArray {
+    list-style-type: none;
+}
+
+.yamlArray>li:before {
+    content: "\2013";
+    display: inline-block;
+    vertical-align: top;
+}
+
+.yamlArrayEntry {
+    display: inline-block;
+    margin-left: 10px;
 }

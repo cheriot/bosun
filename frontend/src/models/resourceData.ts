@@ -1,18 +1,45 @@
-import { ResourceQuery, ResourcesQuery } from "./navpaths"
+import { pathResource, ResourceQuery, ResourcesQuery } from "./navpaths"
 import { createResource } from "solid-js"
 import { KubeResource, KubeResourceList } from '../../wailsjs/go/desktop/FrontendApi';
-import { kube, v1 } from '../../wailsjs/go/models';
+import { kube, relations, v1 } from '../../wailsjs/go/models';
 import _ from "lodash";
 
+export type KubeReference = relations.Reference & {
+    path: string
+}
+export type KubeResource = {
+    describe: string;
+    yaml: string;
+    object: { [key: string]: any };
+    errors: any[];
+    references: KubeReference[]
+}
+
 export const fetchK8sResource = (query: () => ResourceQuery | undefined) => {
-    const fetchResource = (source: ResourceQuery): Promise<kube.Resource> => {
+    const fetchResource = (source: ResourceQuery): Promise<KubeResource> => {
         return KubeResource(source.k8sCtx, source.k8sNs, source.group, source.kind, source.name)
+            .then((res): KubeResource => {
+                const resfsWithPath: KubeReference[] = res.references.map(ref => Object.assign(ref, {
+                    path: pathResource({
+                        k8sCtx: source.k8sCtx,
+                        k8sNs: ref.Namespace != "" ? ref.Namespace : source.k8sNs,
+                        group: ref.Group,
+                        kind: ref.Kind,
+                        name: ref.Name,
+                    })
+                }))
+                return { ...res, references: resfsWithPath }
+            })
     }
+
+    const initialReferences: KubeReference[] = []
+    const initialResource: kube.Resource = kube.Resource.createFrom({})
+    const initialValue: KubeResource = Object.assign(initialResource, {references: initialReferences})
 
     const [resource] = createResource(
         query,
         fetchResource,
-        { initialValue: kube.Resource.createFrom({}) }
+        { initialValue: initialValue }
     )
 
     return resource

@@ -50,7 +50,7 @@ type Reference struct {
 	Kind      string
 	Name      string
 	Namespace string
-	Note      string
+	Property  string
 }
 
 func UnstructuredReferences(s *runtime.Scheme, u *unstructured.Unstructured) ([]Reference, error) {
@@ -99,6 +99,7 @@ var PodReferences = func(p *corev1.Pod) (refs []Reference) {
 			Version:      corev1.SchemeGroupVersion.Version,
 			Kind:         "Node",
 			Name:         p.Spec.NodeName,
+			Property:     ".spec.nodeName",
 		})
 	}
 
@@ -109,6 +110,7 @@ var PodReferences = func(p *corev1.Pod) (refs []Reference) {
 			Version:      corev1.SchemeGroupVersion.Version,
 			Kind:         "ServiceAccount",
 			Name:         p.Spec.ServiceAccountName,
+			Property:     ".spec.serviceAccountName",
 		})
 	}
 
@@ -170,6 +172,7 @@ func MetaReferences(u *unstructured.Unstructured) []Reference {
 			Version:      corev1.SchemeGroupVersion.Version,
 			Kind:         "Namespace",
 			Name:         ns,
+			Property:     ".metadata.namespace",
 		})
 	}
 

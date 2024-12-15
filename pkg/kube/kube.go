@@ -151,10 +151,11 @@ func findAPIResourcesFuzzy(apiResources []metav1.APIResource, identifier string)
 }
 
 type Resource struct {
-	Describe   string                `json:"describe"`
-	Yaml       string                `json:"yaml"`
-	References []relations.Reference `json:"references"`
-	Errors     []error               `json:"errors"`
+	Describe   string                 `json:"describe"`
+	Yaml       string                 `json:"yaml"`
+	References []relations.Reference  `json:"references"`
+	Object     map[string]interface{} `json:"object"`
+	Errors     []error                `json:"errors"`
 }
 
 func (kc *KubeCluster) GetResource(ctx context.Context, nsName string, group string, kind string, resourceName string) (*Resource, error) {
@@ -169,17 +170,17 @@ func (kc *KubeCluster) GetResource(ctx context.Context, nsName string, group str
 		errors = append(errors, fmt.Errorf("found more APIResource matches than expected, %d, for GetKubeObject %+v", len(matches), matches))
 	}
 
-	unstructured, err := kc.getResource(ctx, apiResource, nsName, resourceName)
+	u, err := kc.getResource(ctx, apiResource, nsName, resourceName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to GetKubeObject: %w", err)
 	}
 
-	yamlStr, err := renderYaml(unstructured)
+	yamlStr, err := renderYaml(u)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("unable to serialize yaml: %w", err))
 	}
 
-	refs, err := relations.UnstructuredReferences(kc.scheme, unstructured)
+	refs, err := relations.UnstructuredReferences(kc.scheme, u)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("unable to extract references: %w", err))
 	}
@@ -195,6 +196,7 @@ func (kc *KubeCluster) GetResource(ctx context.Context, nsName string, group str
 		Yaml:       yamlStr,
 		Describe:   describeStr,
 		References: refs,
+		Object:     u.Object,
 		Errors:     errors,
 	}, nil
 }

@@ -1,13 +1,14 @@
-import type { Component } from "solid-js";
-import { createEffect, createSignal, Show, on, For } from "solid-js"
+import type { Accessor, Component, InitializedResource } from "solid-js";
+import { createEffect, createSignal, Show, For, Switch, Match } from "solid-js"
 import { useSearchParams, useLocation } from "@solidjs/router";
 import { pathResource, ResourceQuery } from '../models/navpaths';
 import { setPageTitle } from '../models/pageMeta';
 import { BreadcrumbBuilder, setBreadcrumbs } from '../models/breadcrumbs';
-import { fetchK8sResource } from "../models/resourceData";
+import { fetchK8sResource, KubeReference } from "../models/resourceData";
 import { FindText } from "../components/FindFilter";
 import { relations } from "../../wailsjs/go/models";
 import styles from './ResourcePage.module.css';
+
 
 export const ResourcePage: Component = () => {
     const location = useLocation();
@@ -52,10 +53,11 @@ export const ResourcePage: Component = () => {
 
     const resource = fetchK8sResource(resourceQuery)
 
-        const describeTab = 'describe'
-        const yamlTab = 'yaml'
-        const nsTabs = [describeTab, yamlTab]
-        const [selectedTab, setSelectedTab] = createSignal(describeTab)
+    const newYamlTab = 'hyper yaml'
+    const describeTab = 'describe'
+    const yamlTab = 'yaml'
+    const nsTabs = [newYamlTab, describeTab, yamlTab]
+    const [selectedTab, setSelectedTab] = createSignal(newYamlTab)
 
     return (
         <div>
@@ -99,6 +101,12 @@ export const ResourcePage: Component = () => {
                     </ul>
                 </div>
 
+                <Show when={selectedTab() == newYamlTab && resource().object}>
+                    <div class={styles.mainContent}>
+                        <Yaml value={resource().object} references={referenceMap(resource().references)}/>
+                    </div>
+                </Show>
+
                 <Show when={selectedTab() == describeTab}>
                     <pre class={styles.mainContent}>{resource().describe}</pre>
                 </Show>
@@ -109,4 +117,81 @@ export const ResourcePage: Component = () => {
             </Show>
         </div>
     )
+}
+
+type YamlProps = {
+    value: any
+    indent?: number
+    prefix?: string
+    references: Map<string,KubeReference>
+}
+const Yaml: Component<YamlProps> = (props: YamlProps) => {
+    const indent = props.indent || 0
+    const indentStyle = `margin-left: ${indent * 1.5}rem`
+    const prefix = props.prefix || ""
+    return (
+        <Switch>
+            <Match when={props.value === null}>
+                <span class={styles.yamlValue}>null</span>
+            </Match>
+            <Match when={typeof (props.value) === "string"}>
+                <span class={styles.yamlValue}>
+                    <YamlString value={props.value} prefix={prefix} references={props.references}/>
+                </span>
+            </Match>
+            <Match when={Array.isArray(props.value)}>
+                <Switch>
+                    <Match when={props.value.length == 0}>
+                        []
+                    </Match>
+                    <Match when={true}>
+                        <For each={props.value}>
+                            {v =>
+                                <ol style={indentStyle} class={styles.yamlArray}>
+                                    <li>
+                                        <div class={styles.yamlArrayEntry}>
+                                            <Yaml value={v} indent={0} prefix={prefix + "[]"} references={props.references}/>
+                                        </div>
+                                    </li>
+                                </ol>
+                            }
+                        </For>
+                    </Match>
+                </Switch>
+            </Match>
+            <Match when={typeof (props.value) === "object"}>
+                <For each={Object.keys(props.value)}>
+                    {key =>
+                        <div>
+                            <span style={indentStyle} class={styles.yamlKey}>
+                                {key}:&nbsp;
+                            </span>
+                            <Yaml value={props.value[key]} indent={indent + 1} prefix={prefix + "." + key} references={props.references}/>
+                        </div>}
+                </For>
+            </Match>
+            <Match when={true}>{props.value.toString()}</Match>
+        </Switch>
+    )
+}
+
+type YamlStringProps = {
+    value: string
+    prefix: string
+    references: Map<string,KubeReference>
+}
+const YamlString: Component<YamlStringProps> = (props: YamlStringProps) => {
+    const ref = props.references.get(props.prefix)
+    if (ref) {
+        return <a href={ref.path}>{props.value}</a>
+    }
+    return (
+        props.value
+    )
+}
+
+const referenceMap = (refs: Array<KubeReference>): Map<string,KubeReference> => {
+    const m = new Map<string,KubeReference>()
+    refs.filter(r => r.Property.length > 0).forEach(r => { m.set(r.Property, r) })
+    return m
 }
