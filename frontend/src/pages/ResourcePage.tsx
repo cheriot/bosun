@@ -70,7 +70,7 @@ export const ResourcePage: Component = () => {
             </Show>
 
             <Show when={resource.state == 'ready'}>
-                <Show when={resource().references}>
+                <Show when={resource().references && resource().references.length > 0}>
                     Related: &nbsp;
                     <For each={resource().references}>
                         {(rel: relations.Reference, i) =>

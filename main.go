@@ -63,17 +63,9 @@ func main() {
 			// DisableFramelessWindowDecorations: false,
 			WebviewUserDataPath: "",
 		},
-		// Mac platform specific options
 		Mac: &mac.Options{
-			TitleBar: &mac.TitleBar{
-				TitlebarAppearsTransparent: true,
-				HideTitle:                  false,
-				HideTitleBar:               false,
-				FullSizeContent:            false,
-				UseToolbar:                 true,
-				HideToolbarSeparator:       true,
-			},
-			Appearance:           mac.DefaultAppearance,
+			TitleBar:             mac.TitleBarDefault(),
+			Appearance:           mac.NSAppearanceNameAqua,
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
 			About: &mac.AboutInfo{
