@@ -123,7 +123,8 @@ export const ResourcePage: Component = () => {
 type YamlProps = {
     value: any
     indent?: number
-    prefix?: string
+    path?: string
+    freezePath?: string
     references: Map<string, KubeReference>
 }
 
@@ -143,7 +144,7 @@ const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
         const yamlElements: HTMLElement[] = []
         const findYamlElements = (el: HTMLElement) => {
             // depth first so we list them top to bottom
-            if (el.dataset.yaml) {
+            if (el.dataset.freezeYaml) {
                 yamlElements.push(el)
             }
             for (let i = 0; i < el.children.length; i++) {
@@ -158,14 +159,14 @@ const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
         }
 
         const displayPaths = yamlElements.map((el: HTMLElement) => {
-            const yamlPath = el.dataset.yaml!
-            const {depth, json} = parseYamlPath(yamlPath)
+            const yamlPath = el.dataset.freezeYaml!
+            const { depth, json } = parseYamlPath(yamlPath)
 
             const rect = el.getBoundingClientRect()
             // y-axis position relative to the document, rect is relative to the viewport
             const documentY = window.scrollY + rect.y
             // account for headers frozen above this one
-            const start = documentY - (depth-1) * lineHeight
+            const start = documentY - (depth - 1) * lineHeight
             const end = documentY + rect.height - depth * lineHeight
             if (rect.height / lineHeight > depth && start < end) {
                 return {
@@ -180,7 +181,7 @@ const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
         }).filter(v => v !== undefined)
 
         // Precalculate what to show for each y-axis value a scroll/resize event will need.
-        yCacheYamlPath = new Array<Json>(yMax - yMin)
+        yCacheYamlPath = new Array<Json>(Math.ceil(yMax - yMin))
         for (let i = 0; i < displayPaths.length; i++) {
             const dpath = displayPaths[i]
             const start = dpath.start - yMin
@@ -221,8 +222,11 @@ const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
 
 const indentStyle = (indent: number) => `margin-left: ${indent * 1.5}rem`
 
-const yamlPathKey = (prefix: string, key: string) => `${prefix}${YAML_PATH_SEP}${key}`
-const yamlPathArray = (prefix: string, v: any) => {
+const pathAdd = (prefix: string, key: string) => `${prefix}.${key}`
+const pathAddArray = (prefix: string, idx: number) => `${prefix}[${idx}]`
+
+const freezePathAdd = (prefix: string, key: string) => `${prefix}${YAML_PATH_SEP}${key}`
+const freezePathAddArray = (prefix: string, v: any) => {
     let content = ''
     if (v && !Array.isArray(v)) {
         const vKeys = yamlKeys(v)
@@ -247,13 +251,13 @@ const yamlPathArray = (prefix: string, v: any) => {
 type Json = any
 const YAML_PATH_SEP = ',' // any char not returned from encodeURIComponent
 
-const parseYamlPath = (yamlPath: string): {depth: number, json: Json} => {
+const parseYamlPath = (yamlPath: string): { depth: number, json: Json } => {
     // .spec.containers.[command:].command
     // .spec.containers.[command:].volumeMounts
     // .spec.volumes.[name:kube-api-access-dk22g].projected.sources
     const parts = yamlPath.split(YAML_PATH_SEP).filter(v => v != '')
 
-    type Acc = { depth: number, json: Json}
+    type Acc = { depth: number, json: Json }
     return parts.reduceRight<Acc>((acc, part: string): Acc => {
         if (part.startsWith('[')) {
             if (part == '[]') {
@@ -290,7 +294,7 @@ type FrozenYamlProps = {
 }
 const FrozenYaml: Component<FrozenYamlProps> = (props: FrozenYamlProps) => {
 
-    // Same markup structure as <Yaml /> but only render keys
+    // Same markup structure as <Yaml /> but fixed and only render keys
     return (
         <Switch>
             <Match when={Array.isArray(props.json)}>
@@ -324,7 +328,10 @@ const FrozenYaml: Component<FrozenYamlProps> = (props: FrozenYamlProps) => {
 
 const Yaml: Component<YamlProps> = (props: YamlProps) => {
     const indent = props.indent || 0
-    const prefix = props.prefix || ""
+    const path = props.path || ""
+    const freezePath = props.freezePath || ""
+    const itrKeys = _.memoize(() => yamlKeys(props.value))
+
     return (
         <Switch>
             <Match when={props.value === null}>
@@ -332,7 +339,7 @@ const Yaml: Component<YamlProps> = (props: YamlProps) => {
             </Match>
             <Match when={typeof (props.value) === "string"}>
                 <span class={styles.yamlValue}>
-                    <YamlString value={props.value} prefix={prefix} references={props.references} />
+                    <YamlString value={props.value} path={path} indent={indent + 1} references={props.references} />
                 </span>
             </Match>
             <Match when={Array.isArray(props.value)}>
@@ -345,8 +352,8 @@ const Yaml: Component<YamlProps> = (props: YamlProps) => {
                             {(v, idx) =>
                                 <ol style={indentStyle(indent)} class={styles.yamlArray}>
                                     <li>
-                                        <div class={styles.yamlArrayEntry} data-yaml={yamlPathArray(prefix, v)}>
-                                            <Yaml value={v} indent={0} prefix={yamlPathArray(prefix, v)} references={props.references} />
+                                        <div class={styles.yamlArrayEntry} data-freeze-yaml={freezePathAddArray(freezePath, v)}>
+                                            <Yaml value={v} indent={0} path={pathAddArray(path, idx())} freezePath={freezePathAddArray(freezePath, v)} references={props.references} />
                                         </div>
                                     </li>
                                 </ol>
@@ -356,31 +363,35 @@ const Yaml: Component<YamlProps> = (props: YamlProps) => {
                 </Switch>
             </Match>
             <Match when={typeof (props.value) === "object"}>
-                <For each={yamlKeys(props.value)}>
+                <For each={itrKeys()}>
                     {key =>
-                        <div data-yaml={yamlPathKey(prefix, key)}>
+                        <div data-freeze-yaml={freezePathAdd(freezePath, key)}>
                             <span style={indentStyle(indent)} class={styles.yamlKey}>
                                 {key}:&nbsp;
                             </span>
-                            <Yaml value={props.value[key]} indent={indent + 1} prefix={yamlPathKey(prefix, key)} references={props.references} />
+                            <Yaml value={props.value[key]} indent={indent + 1} path={pathAdd(path, key)} freezePath={freezePathAdd(freezePath, key)} references={props.references} />
                         </div>}
                 </For>
+                <Show when={itrKeys().length == 0}>
+                    {"{}"}
+                </Show>
             </Match>
             <Match when={true}>{props.value.toString()}</Match>
         </Switch>
     )
 }
 
-type YamlStringProps = {
-    value: string
-    prefix: string
-    references: Map<string, KubeReference>
-}
-const YamlString: Component<YamlStringProps> = (props: YamlStringProps) => {
-    const ref = props.references.get(props.prefix)
+const YamlString: Component<YamlProps> = (props: YamlProps) => {
+    const ref = props.path ? props.references.get(props.path) : undefined
     if (ref) {
         return <a href={ref.path}>{props.value}</a>
     }
+
+    const firstEnd = props.value.indexOf('\n')
+    if (firstEnd != -1 && firstEnd != props.value.length - 1) {
+        return <><span>|</span><pre style={indentStyle(props.indent || 0)} class={styles.yamlPre}>{props.value}</pre></>
+    }
+
     return (
         props.value
     )
@@ -392,12 +403,12 @@ const referenceMap = (refs: Array<KubeReference>): Map<string, KubeReference> =>
     return m
 }
 
-const yamlKeys = (obj: Record<string,any>): string[] => {
+const yamlKeys = (obj: Record<string, any>): string[] => {
     const keys = Object.keys(obj)
     const nameIdx = keys.indexOf('name')
     if (nameIdx > -1) {
-        for(let i=nameIdx; i>0; i--) {
-            keys[i] = keys[i-1]
+        for (let i = nameIdx; i > 0; i--) {
+            keys[i] = keys[i - 1]
         }
         keys[0] = 'name'
     }

@@ -40,3 +40,8 @@
 .yamlArrayEntry {
     margin-left: 1.5rem; /* same as indent step */
 }
+
+.yamlPre {
+    padding: 0;
+    background-color: white;
+}
