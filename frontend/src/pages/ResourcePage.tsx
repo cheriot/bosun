@@ -225,7 +225,7 @@ const yamlPathKey = (prefix: string, key: string) => `${prefix}${YAML_PATH_SEP}$
 const yamlPathArray = (prefix: string, v: any) => {
     let content = ''
     if (v && !Array.isArray(v)) {
-        const vKeys = Object.keys(v)
+        const vKeys = yamlKeys(v)
         if (vKeys && vKeys.length > 0) {
             // the first property of the value appears in the frozen header
             const key = vKeys[0]
@@ -307,7 +307,7 @@ const FrozenYaml: Component<FrozenYamlProps> = (props: FrozenYamlProps) => {
                 </For>
             </Match>
             <Match when={typeof (props.json) == 'object'}>
-                <For each={Object.keys(props.json)}>
+                <For each={yamlKeys(props.json)}>
                     {(key) =>
                         <div>
                             <span style={indentStyle(props.indent)} class={styles.yamlKey}>
@@ -356,7 +356,7 @@ const Yaml: Component<YamlProps> = (props: YamlProps) => {
                 </Switch>
             </Match>
             <Match when={typeof (props.value) === "object"}>
-                <For each={Object.keys(props.value)}>
+                <For each={yamlKeys(props.value)}>
                     {key =>
                         <div data-yaml={yamlPathKey(prefix, key)}>
                             <span style={indentStyle(indent)} class={styles.yamlKey}>
@@ -390,4 +390,16 @@ const referenceMap = (refs: Array<KubeReference>): Map<string, KubeReference> =>
     const m = new Map<string, KubeReference>()
     refs.filter(r => r.Property.length > 0).forEach(r => { m.set(r.Property, r) })
     return m
+}
+
+const yamlKeys = (obj: Record<string,any>): string[] => {
+    const keys = Object.keys(obj)
+    const nameIdx = keys.indexOf('name')
+    if (nameIdx > -1) {
+        for(let i=nameIdx; i>0; i--) {
+            keys[i] = keys[i-1]
+        }
+        keys[0] = 'name'
+    }
+    return keys
 }
