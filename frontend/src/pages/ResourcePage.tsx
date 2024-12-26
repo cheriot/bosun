@@ -128,23 +128,22 @@ type YamlProps = {
 }
 
 const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
-    let [showYamlPath, setShowYamlPath] = createSignal(false)
-    let [yamlPath, setYamlPath] = createSignal<Array<string>>([])
+    let [showFrozenHeader, setShowFrozenHeader] = createSignal(false)
+    let [frozenYaml, setFrozenYaml] = createSignal<Json>()
     let yMin = 0, yMax = 0 // yaml range on the y-axis relative to the document
-    let yCacheYamlPath: string[][]
+    let yCacheYamlPath: Json[] // frozen header yaml for each pixel a scroll handler will need
     let yamlContainer: HTMLDivElement
 
     onMount(() => {
         let root = yamlContainer as HTMLDivElement
 
-        // line height and font size styles MUST be inherited
+        // line height and font size styles MUST be inherited within the yaml display
         const lineHeight = parseInt(window.getComputedStyle(root).lineHeight)
 
         const yamlElements: HTMLElement[] = []
         const findYamlElements = (el: HTMLElement) => {
             // depth first so we list them top to bottom
-            const yamlPath = el.getAttribute("data-yaml")
-            if (yamlPath) {
+            if (el.dataset.yaml) {
                 yamlElements.push(el)
             }
             for (let i = 0; i < el.children.length; i++) {
@@ -186,22 +185,20 @@ const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
             const dpath = displayPaths[i]
             const start = dpath.start - yMin
             const end = dpath.end - yMin
-            // console.log('pathJson', dpath.yamlPath, dpath.depth, dpath.pathJson)
 
             for (let j = start; j < end; j++) {
                 yCacheYamlPath[j] = dpath.pathJson
             }
         }
-        // console.log('yCacheYamlPath', yCacheYamlPath)
     })
 
     const scrollListener = () => {
         const vv = window.visualViewport!
         if (yMin <= vv.pageTop && vv.pageTop <= yMax) {
-            setShowYamlPath(true)
-            setYamlPath(yCacheYamlPath[vv.pageTop - yMin])
+            setShowFrozenHeader(true)
+            setFrozenYaml(yCacheYamlPath[vv.pageTop - yMin])
         } else {
-            setShowYamlPath(false)
+            setShowFrozenHeader(false)
         }
     }
     document.addEventListener('scroll', scrollListener)
@@ -211,9 +208,9 @@ const YamlFixer: Component<YamlProps> = (props: YamlProps) => {
 
     return (
         <div ref={yamlContainer!}>
-            <Show when={showYamlPath()}>
+            <Show when={showFrozenHeader()}>
                 <div class={styles.yamlPath}>
-                    <FrozenYaml json={yamlPath()} indent={0} />
+                    <FrozenYaml json={frozenYaml()} indent={0} />
                 </div>
             </Show>
 
@@ -247,15 +244,17 @@ const yamlPathArray = (prefix: string, v: any) => {
     return `${prefix}${YAML_PATH_SEP}[${content}]`
 }
 
-const YAML_PATH_SEP = ',' // any char not returned from encodeURIComponent
 type Json = any
+const YAML_PATH_SEP = ',' // any char not returned from encodeURIComponent
+
 const parseYamlPath = (yamlPath: string): {depth: number, json: Json} => {
     // .spec.containers.[command:].command
     // .spec.containers.[command:].volumeMounts
     // .spec.volumes.[name:kube-api-access-dk22g].projected.sources
     const parts = yamlPath.split(YAML_PATH_SEP).filter(v => v != '')
 
-    return parts.reduceRight<{ depth: number, json: any }>((acc, part: string): any => {
+    type Acc = { depth: number, json: Json}
+    return parts.reduceRight<Acc>((acc, part: string): Acc => {
         if (part.startsWith('[')) {
             if (part == '[]') {
                 acc.depth++
@@ -309,7 +308,7 @@ const FrozenYaml: Component<FrozenYamlProps> = (props: FrozenYamlProps) => {
             </Match>
             <Match when={typeof (props.json) == 'object'}>
                 <For each={Object.keys(props.json)}>
-                    {(key, idx) =>
+                    {(key) =>
                         <div>
                             <span style={indentStyle(props.indent)} class={styles.yamlKey}>
                                 {key}:&nbsp;
