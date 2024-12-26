@@ -107,7 +107,7 @@ const App: Component = () => {
   onCleanup(() => window.removeEventListener(OtherWindowKeypressEvent, otherWindowListener))
 
   return (
-    <div class="columns is-gapless">
+    <div class={`columns is-gapless ${styles.browser}`}>
 
       {/* sidebar for tabs */}
       <div class={`column is-narrow ${styles.tabColumn}`}>

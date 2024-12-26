@@ -1,3 +1,8 @@
+.browser {
+  height: 100vh;
+  overflow-y: clip;
+}
+
 .tabColumn {
   background-color: hsl(0, 0%, 94%);
 }
