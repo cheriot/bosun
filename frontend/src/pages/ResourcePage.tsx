@@ -405,12 +405,21 @@ const referenceMap = (refs: Array<KubeReference>): Map<string, KubeReference> =>
 
 const yamlKeys = (obj: Record<string, any>): string[] => {
     const keys = Object.keys(obj)
-    const nameIdx = keys.indexOf('name')
-    if (nameIdx > -1) {
-        for (let i = nameIdx; i > 0; i--) {
-            keys[i] = keys[i - 1]
+
+    const sortToFirst = (p: string) => {
+        const nameIdx = keys.indexOf(p)
+        if (nameIdx > -1) {
+            for (let i = nameIdx; i > 0; i--) {
+                keys[i] = keys[i - 1]
+            }
+            keys[0] = p
         }
-        keys[0] = 'name'
     }
+
+    sortToFirst('name')
+    sortToFirst('metadata')
+    sortToFirst('kind')
+    sortToFirst('apiVersion')
+
     return keys
 }
