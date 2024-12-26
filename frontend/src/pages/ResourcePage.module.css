@@ -6,6 +6,16 @@
     font-size: 14px;
 }
 
+.yamlPath {
+    position: fixed;
+    top: 0;
+    color: gray;
+    background-color: white;
+    padding: 0px;
+    width: 100%;
+    z-index: 1;
+}
+
 .yamlValue {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -21,11 +31,12 @@
 
 .yamlArray>li:before {
     content: "\2013";
-    display: inline-block;
     vertical-align: top;
+    position: absolute;
+    z-index: 0;
+    background-color: white;
 }
 
 .yamlArrayEntry {
-    display: inline-block;
-    margin-left: 10px;
+    margin-left: 1.5rem; /* same as indent step */
 }
